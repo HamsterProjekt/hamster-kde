@@ -1,0 +1,412 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-or-later
+"""Hamster's windows for KDE: overview, add/edit activity, tracking settings.
+
+    hamster-kde [overview]     show the overview
+    hamster-kde add            add an activity
+    hamster-kde edit ID        edit the activity with this id
+    hamster-kde prefs          tracking settings
+    hamster-kde --service      wait for requests on D-Bus (used for activation)
+
+The windows are QML (see qml/); the data comes from the Hamster service
+(org.gnome.Hamster) over D-Bus. This program also provides
+org.gnome.Hamster.WindowServer, the interface that panel widgets call to
+open these windows. Only one instance runs; a second one hands its request
+over to the first and exits.
+"""
+
+import datetime
+import json
+import os
+import re
+import shutil
+import signal
+import sys
+
+# The KDE look for Qt Quick Controls. Must be set before Qt starts.
+os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "org.kde.desktop")
+
+from PyQt6.QtCore import (QObject, QTimer, QUrl, pyqtClassInfo, pyqtProperty,
+                          pyqtSignal, pyqtSlot)
+from PyQt6.QtDBus import QDBusAbstractAdaptor, QDBusConnection, QDBusInterface, QDBusMessage
+from PyQt6.QtGui import QIcon
+from PyQt6.QtQml import QQmlApplicationEngine, QQmlComponent
+from PyQt6.QtWidgets import QApplication
+
+sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+import reports  # noqa: E402
+from hamsterbus import HamsterBus  # noqa: E402
+
+SERVICE = "org.gnome.Hamster.WindowServer"
+PATH = "/org/gnome/Hamster/WindowServer"
+QML_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "qml")
+DEFAULT_DAY_START = 5 * 60 + 30
+DIRECTORY_KEY = "markdown-directory"
+# the files of the Markdown storage: months and the activity list
+STORAGE_FILE_RE = re.compile(r"^(\d{4}-\d{2}|activities)\.md$")
+
+
+def default_storage_directory():
+    data_home = os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share")
+    return os.path.join(data_home, "hamster", "markdown")
+
+
+class Settings(QObject):
+    """Hamster's own settings (GSettings schema org.gnome.Hamster).
+
+    The service reads the day start from there, so that is where it has to
+    be written. Without the schema, the default is shown and cannot change.
+    """
+
+    dayStartMinutesChanged = pyqtSignal()
+    storageDirectoryChanged = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        self._settings = None
+        self._has_directory_key = False
+        try:
+            from gi.repository import Gio
+            source = Gio.SettingsSchemaSource.get_default()
+            schema = source.lookup("org.gnome.Hamster", True) if source else None
+            if schema:
+                self._settings = Gio.Settings.new("org.gnome.Hamster")
+                self._has_directory_key = schema.has_key(DIRECTORY_KEY)
+        except ImportError:
+            pass
+
+    # --- where the Markdown storage keeps its files ---
+
+    @pyqtProperty(bool, constant=True)
+    def storageConfigurable(self):
+        return self._has_directory_key
+
+    @pyqtProperty(str, constant=True)
+    def defaultStorageDirectory(self):
+        return default_storage_directory()
+
+    @pyqtProperty(str, notify=storageDirectoryChanged)
+    def storageDirectory(self):
+        chosen = ""
+        if self._has_directory_key:
+            chosen = self._settings.get_string(DIRECTORY_KEY).strip()
+        return os.path.expanduser(chosen) if chosen else default_storage_directory()
+
+    @pyqtProperty(bool, notify=storageDirectoryChanged)
+    def storageIsDefault(self):
+        return os.path.realpath(self.storageDirectory) == os.path.realpath(default_storage_directory())
+
+    @pyqtSlot(str, bool, result="QVariantMap")
+    def changeStorageDirectory(self, folder, copy_files):
+        """Use another folder for the Markdown files.
+
+        folder: a path or file: URL; empty for the default location.
+        copy_files: copy the current files there. Files already there are
+                    never overwritten, and nothing is removed from the
+                    current folder.
+
+        Returns {"ok": bool, "message": str}. On success, the Hamster
+        service is stopped; it starts again with the new folder on the
+        next request.
+        """
+        if not self._has_directory_key:
+            return {"ok": False, "message": "This version of Hamster has no setting for the storage folder."}
+        if folder.startswith("file:"):
+            folder = QUrl(folder).toLocalFile()
+        target = os.path.expanduser(folder.strip()) if folder.strip() else default_storage_directory()
+        current = self.storageDirectory
+        if os.path.realpath(target) == os.path.realpath(current):
+            return {"ok": True, "message": ""}
+
+        copied, kept = 0, 0
+        try:
+            os.makedirs(target, exist_ok=True)
+            if not os.access(target, os.W_OK):
+                raise PermissionError("the folder is not writable")
+            if copy_files and os.path.isdir(current):
+                for name in sorted(os.listdir(current)):
+                    if not STORAGE_FILE_RE.match(name):
+                        continue
+                    destination = os.path.join(target, name)
+                    if os.path.exists(destination):
+                        kept += 1
+                    else:
+                        shutil.copy2(os.path.join(current, name), destination)
+                        copied += 1
+        except OSError as error:
+            return {"ok": False, "message": "Could not use {}: {}".format(target, error.strerror or error)}
+
+        from gi.repository import Gio
+        is_default = os.path.realpath(target) == os.path.realpath(default_storage_directory())
+        self._settings.set_string(DIRECTORY_KEY, "" if is_default else target)
+        Gio.Settings.sync()
+
+        # the service reads the folder when it starts
+        quit_call = QDBusMessage.createMethodCall("org.gnome.Hamster", "/org/gnome/Hamster",
+                                                  "org.gnome.Hamster", "Quit")
+        quit_call.setAutoStartService(False)
+        QDBusConnection.sessionBus().call(quit_call)
+        self.storageDirectoryChanged.emit()
+
+        parts = []
+        if copied:
+            parts.append("{} file(s) copied; the originals are still in {}.".format(copied, current))
+        if kept:
+            parts.append("{} file(s) were already there and were left as they are.".format(kept))
+        return {"ok": True, "message": " ".join(parts)}
+
+    @pyqtProperty(bool, constant=True)
+    def writable(self):
+        return self._settings is not None
+
+    # --- reports ---
+
+    @pyqtProperty(str, constant=True)
+    def reportFolder(self):
+        """Where the save dialog for a report starts: where the last one went."""
+        folder = ""
+        if self._settings is not None:
+            folder = os.path.expanduser(self._settings.get_string("last-report-folder"))
+        return folder if folder and os.path.isdir(folder) else os.path.expanduser("~")
+
+    @pyqtSlot(str, str, result=str)
+    def reportName(self, first, last):
+        """File name suggested for a report on these days (YYYY-MM-DD)."""
+        return reports.suggested_name(datetime.date.fromisoformat(first),
+                                      datetime.date.fromisoformat(last)) + ".html"
+
+    @pyqtSlot(str, str, str, str, str, result="QVariantMap")
+    def exportReport(self, chosen_format, path, facts_json, first, last):
+        """Write the activities to a file.
+
+        chosen_format: "html", "tsv", "xml" or "ical", as picked in the
+                       dialog; an extension in the name that says otherwise
+                       wins, and a missing one is added.
+        path: a path or file: URL.
+        facts_json: the activities, see reports.py.
+        first, last: the days shown (YYYY-MM-DD).
+
+        Returns {"ok": bool, "message": str, "path": str, "format": str}.
+        """
+        if path.startswith("file:"):
+            path = QUrl(path).toLocalFile()
+        report_format, target = reports.resolve(os.path.expanduser(path), chosen_format)
+        result = {"ok": False, "message": "", "path": target, "format": report_format}
+        if target != os.path.expanduser(path) and os.path.exists(target):
+            # the dialog asked about the name without the extension only
+            result["message"] = "{} already exists. Choose it in the dialog to replace it.".format(target)
+            return result
+        data_home = os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share")
+        try:
+            reports.write(report_format, target, json.loads(facts_json),
+                          datetime.date.fromisoformat(first), datetime.date.fromisoformat(last),
+                          day_start=self.dayStartMinutes,
+                          template_dirs=(os.path.join(data_home, "hamster"),
+                                         os.path.dirname(os.path.realpath(__file__))))
+        except OSError as error:
+            result["message"] = "Could not write {}: {}".format(target, error.strerror or error)
+            return result
+        except (ValueError, KeyError, TypeError) as error:
+            result["message"] = "Could not write the report: {}".format(error)
+            return result
+        if self._settings is not None:
+            from gi.repository import Gio
+            self._settings.set_string("last-report-folder", os.path.dirname(target))
+            Gio.Settings.sync()
+        result["ok"] = True
+        return result
+
+    @pyqtProperty(int, notify=dayStartMinutesChanged)
+    def dayStartMinutes(self):
+        if self._settings is None:
+            return DEFAULT_DAY_START
+        return self._settings.get_value("day-start-minutes").unpack()
+
+    @dayStartMinutes.setter
+    def dayStartMinutes(self, minutes):
+        if self._settings is None or minutes == self.dayStartMinutes:
+            return
+        from gi.repository import Gio, GLib
+        self._settings.set_value("day-start-minutes", GLib.Variant("u", minutes))
+        Gio.Settings.sync()
+        self.dayStartMinutesChanged.emit()
+
+
+class Windows(QObject):
+    """Opens the windows; available to QML as `app`."""
+
+    def __init__(self, engine):
+        super().__init__()
+        self._engine = engine
+        self._components = {}
+        self._singles = {}    # name -> the one window of that kind
+        self._windows = []
+        # leave when there is nothing left to show
+        self._idle = QTimer(self, interval=15000, singleShot=True)
+        self._idle.timeout.connect(self._quit_if_idle)
+        self._idle.start()
+
+    def _create(self, name, properties=None):
+        component = self._components.get(name)
+        if component is None:
+            component = QQmlComponent(self._engine, QUrl.fromLocalFile(os.path.join(QML_DIR, name + ".qml")))
+            self._components[name] = component
+        window = component.createWithInitialProperties(properties or {})
+        if window is None:
+            for error in component.errors():
+                print(error.toString(), file=sys.stderr)
+            return None
+        self._windows.append(window)
+        window.visibleChanged.connect(lambda visible, w=window: self._closed(w) if not visible else None)
+        return window
+
+    def _closed(self, window):
+        if window in self._windows:
+            self._windows.remove(window)
+            for name, single in list(self._singles.items()):
+                if single is window:
+                    del self._singles[name]
+            window.deleteLater()
+        try:
+            self._idle.start(1000)
+        except RuntimeError:
+            pass   # the application is going away
+
+    def _quit_if_idle(self):
+        if not self._windows:
+            QApplication.quit()
+
+    def _single(self, name):
+        window = self._singles.get(name)
+        if window is None:
+            window = self._create(name)
+            if window is not None:
+                self._singles[name] = window
+        else:
+            window.show()
+            window.raise_()
+            window.requestActivate()
+
+    @pyqtSlot()
+    def overview(self):
+        self._single("Overview")
+
+    @pyqtSlot()
+    def preferences(self):
+        self._single("Preferences")
+
+    @pyqtSlot(int)
+    def edit(self, fact_id):
+        self._create("EditFact", {"factId": int(fact_id)})
+
+
+@pyqtClassInfo("D-Bus Interface", SERVICE)
+class WindowServer(QDBusAbstractAdaptor):
+    """org.gnome.Hamster.WindowServer, as provided by Hamster's own GUI."""
+
+    def __init__(self, windows):
+        super().__init__(windows)
+        self._windows = windows
+
+    @pyqtSlot()
+    def overview(self):
+        self._windows.overview()
+
+    @pyqtSlot()
+    def preferences(self):
+        self._windows.preferences()
+
+    @pyqtSlot()
+    def about(self):
+        self._windows.overview()
+
+    @pyqtSlot()
+    @pyqtSlot(int)
+    def edit(self, fact_id=0):
+        self._windows.edit(fact_id)
+
+
+def expose(engine):
+    """Make `settings`, `bus` and `app` available to the QML of the engine.
+
+    Return them; they have to be kept for as long as the engine.
+    """
+    settings = Settings()
+    bus = HamsterBus()
+    windows = Windows(engine)
+    context = engine.rootContext()
+    context.setContextProperty("settings", settings)
+    context.setContextProperty("bus", bus)
+    context.setContextProperty("app", windows)
+    return settings, bus, windows
+
+
+def request(command, fact_id):
+    """Return (method, arguments) of the WindowServer call for a command."""
+    if command == "add":
+        return "edit", [0]
+    if command == "edit":
+        return "edit", [fact_id]
+    if command == "prefs":
+        return "preferences", []
+    return "overview", []
+
+
+def main():
+    arguments = sys.argv[1:]
+    service_only = "--service" in arguments
+    arguments = [argument for argument in arguments if argument != "--service"]
+    command = arguments[0] if arguments else "overview"
+    if command not in ("overview", "add", "edit", "prefs") or command in ("-h", "--help"):
+        print(__doc__.strip())
+        return 0 if command in ("-h", "--help") else 2
+    fact_id = 0
+    if command == "edit":
+        try:
+            fact_id = int(arguments[1])
+        except (IndexError, ValueError):
+            print("edit needs the id of an activity", file=sys.stderr)
+            return 2
+
+    flatpak_id = os.environ.get("FLATPAK_ID")
+    if flatpak_id:
+        # Plasma chooses this style for the applications it starts itself;
+        # in the Flatpak it is there whatever the desktop
+        os.environ.setdefault("QT_QUICK_CONTROLS_STYLE", "org.kde.desktop")
+
+    app = QApplication(sys.argv[:1])
+    app.setApplicationName("hamster-kde")
+    app.setApplicationDisplayName("Hamster")
+    # as a Flatpak, the desktop file and the icon are named after the application id
+    app.setDesktopFileName(flatpak_id or "org.projecthamster.hamster-kde")
+    app.setWindowIcon(QIcon.fromTheme(flatpak_id or "chronometer", QIcon.fromTheme("chronometer")))
+    app.setQuitOnLastWindowClosed(False)
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
+    bus = QDBusConnection.sessionBus()
+    method, method_arguments = request(command, fact_id)
+
+    if not bus.registerService(SERVICE):
+        # another instance is running: it opens the window
+        if service_only:
+            return 0
+        reply = QDBusInterface(SERVICE, PATH, SERVICE, bus).call(method, *method_arguments)
+        if reply.errorMessage():
+            print(reply.errorMessage(), file=sys.stderr)
+            return 1
+        return 0
+
+    engine = QQmlApplicationEngine()
+    settings, hamster, windows = expose(engine)
+
+    adaptor = WindowServer(windows)   # noqa: F841 (kept alive by its parent)
+    bus.registerObject(PATH, windows)
+
+    if not service_only:
+        getattr(windows, method)(*method_arguments)
+
+    return app.exec()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
