@@ -14,7 +14,8 @@ It has three parts:
 - **The windows** (overview, add/edit activity, tracking settings), written
   with Qt Quick and Kirigami in place of Hamster's GTK ones, so they follow
   the Plasma theme.
-- **The Markdown backend**: the Hamster service from a fork of Hamster, which
+- **The Markdown backend**: the Hamster service from
+  [a fork of Hamster](https://github.com/atterdag/hamster), which
   keeps the activities in plain Markdown files instead of a database. The
   files can be edited by hand and synchronised between computers.
 
@@ -44,8 +45,14 @@ or the Markdown backend below.
 
 ## Markdown backend
 
-A Hamster checkout with `src/hamster/storage/markdown.py` (branch
-`main`) stores everything in Markdown files instead of SQLite:
+The fork of Hamster at [atterdag/hamster](https://github.com/atterdag/hamster)
+(branch `main`) has `src/hamster/storage/markdown.py`, which stores
+everything in Markdown files instead of SQLite. Get it next to this
+repository:
+
+    git clone https://github.com/atterdag/hamster.git ~/projects/hamster
+
+The files it writes:
 
     ~/.local/share/hamster/markdown/2026-11.md      facts, one file per month
     ~/.local/share/hamster/markdown/activities.md   categories, activities, tags
@@ -189,9 +196,11 @@ Things to know:
   their folder in the tracking settings; the setting is the Flatpak's own too.
 - It may read and write your home directory (`--filesystem=home`), so that
   the files can be in any folder, and reports saved anywhere.
-- The manifest takes both source trees from this computer (`type: dir`). To
-  build elsewhere, publish the two repositories and name them as `type: git`
-  sources.
+- The manifest takes both source trees from this computer (`type: dir`), so
+  both repositories have to be cloned next to each other. For a build that
+  does not depend on that, name them as `type: git` sources
+  (`https://github.com/atterdag/hamster.git` and
+  `https://github.com/atterdag/hamster-kde.git`) with a `commit`.
 - For Flathub, the id has to change to one under a domain you control
   (`projecthamster.org` is Hamster's; `org.gnome.Hamster` is Hamster's own
   application there), and `flatpak/*.metainfo.xml` needs a developer, a home
