@@ -46,7 +46,7 @@ or the Markdown backend below.
 ## Markdown backend
 
 The fork of Hamster at [atterdag/hamster](https://github.com/atterdag/hamster)
-(branch `main`) has `src/hamster/storage/markdown.py`, which stores
+has `src/hamster/storage/markdown.py`, which stores
 everything in Markdown files instead of SQLite. Get it next to this
 repository:
 
@@ -107,10 +107,14 @@ the distribution package:
 
 This adds on-demand D-Bus services under `~/.local/share/dbus-1/services`
 and Hamster's settings schema under `~/.local/share/glib-2.0/schemas`. It
-needs Python 3 with PyGObject (GTK 3) and dbus-python. Do not combine it
+needs Python 3 with PyGObject and dbus-python (GTK is not needed). Do not combine it
 with the distribution package: both provide `org.gnome.Hamster`.
 
 ## Quick install
+
+[INSTALL.md](INSTALL.md) has the full instructions: the packages to install,
+the steps, updating, uninstalling, the Flatpak, and what to check when
+something does not work. In short, with both repositories cloned:
 
     ./install.sh ~/projects/hamster      # widget + Markdown backend, for your user
     ./install.sh --uninstall
