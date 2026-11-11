@@ -1,13 +1,25 @@
 # Hamster for KDE Plasma
 
-A Plasma 6 panel widget for the [Project Hamster](https://github.com/projecthamster/hamster)
-time tracker. It is a port of the GNOME
-[hamster-shell-extension](https://github.com/projecthamster/hamster-shell-extension)
-and is not an official Project Hamster release.
+A port of the [Project Hamster](https://github.com/projecthamster/hamster)
+time tracker to KDE Plasma, with a backend that stores everything in
+Markdown files. It is not an official Project Hamster release.
 
-The widget shows the current activity and its elapsed time in the panel. Its
-popup has an entry field with autocompletion, today's activities with edit
-and continue buttons, time per category, and the day's total.
+It has three parts:
+
+- **A Plasma 6 panel widget**, a port of the GNOME
+  [hamster-shell-extension](https://github.com/projecthamster/hamster-shell-extension).
+  It shows the current activity and its elapsed time in the panel. Its popup
+  has an entry field with autocompletion, today's activities with edit and
+  continue buttons, time per category, and the day's total.
+- **The windows** (overview, add/edit activity, tracking settings), written
+  with Qt Quick and Kirigami in place of Hamster's GTK ones, so they follow
+  the Plasma theme.
+- **The Markdown backend**: the Hamster service from a fork of Hamster, which
+  keeps the activities in plain Markdown files instead of a database. The
+  files can be edited by hand and synchronised between computers.
+
+Hamster's data model, D-Bus interface and way of entering activities are
+unchanged.
 
 ## How it fits together
 
