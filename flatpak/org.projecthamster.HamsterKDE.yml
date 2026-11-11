@@ -1,0 +1,104 @@
+# Flatpak of Hamster for KDE: the windows of app/ and the Hamster service
+# with the Markdown storage. The Plasma widget is not part of it (Plasma
+# widgets cannot be Flatpaks); see scripts/install-flatpak-widget.sh.
+#
+# Build and install for your user:   flatpak/build.sh
+#
+# The application id is not org.gnome.Hamster: that one is Hamster's own
+# application on Flathub.
+app-id: org.projecthamster.HamsterKDE
+runtime: org.kde.Platform
+runtime-version: '6.11'
+sdk: org.kde.Sdk
+# PyQt6 comes from this base application; its version follows the runtime's
+base: com.riverbankcomputing.PyQt.BaseApp
+base-version: '6.11'
+command: hamster-kde
+
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+  - --device=dri
+  # the names of the Hamster service and of its windows, which the Plasma
+  # widget (and any other Hamster client) calls
+  - --own-name=org.gnome.Hamster
+  - --own-name=org.gnome.Hamster.WindowServer
+  # the Markdown files may be kept anywhere (a folder synchronised by
+  # OneDrive, Dropbox, ...), and reports are saved where the user says
+  - --filesystem=home
+  # colours of the Plasma theme
+  - --filesystem=xdg-config/kdeglobals:ro
+  - --env=HAMSTER_STORAGE=markdown
+
+cleanup-commands:
+  - /app/cleanup-BaseApp.sh
+
+modules:
+  # Not in the runtime; the service and the settings need it (GLib, Gio).
+  - name: pygobject
+    buildsystem: meson
+    config-opts:
+      - -Dpycairo=disabled
+      - -Dtests=false
+      - --wrap-mode=nodownload
+    sources:
+      - type: archive
+        url: https://download.gnome.org/sources/pygobject/3.58/pygobject-3.58.1.tar.gz
+        sha256: 4c80598ade17fbaa7798e01a25d0bf29ce109740786026a074c5c62bb3e79d23
+
+  # The Hamster service is written with it.
+  - name: dbus-python
+    buildsystem: meson
+    config-opts:
+      - --wrap-mode=nodownload
+    sources:
+      - type: archive
+        url: https://dbus.freedesktop.org/releases/dbus-python/dbus-python-1.4.0.tar.xz
+        sha256: c36b28f10ffcc8f1f798aca973bcc132f91f33eb9b6b8904381b4077766043d5
+
+  # The service and the storage of Hamster, branch main of the checkout.
+  # Its GTK windows are not installed.
+  - name: hamster
+    buildsystem: simple
+    build-commands:
+      - install -d ${FLATPAK_DEST}/lib/hamster
+      - cp -r src/hamster ${FLATPAK_DEST}/lib/hamster/
+      - rm -rf ${FLATPAK_DEST}/lib/hamster/hamster/__pycache__ ${FLATPAK_DEST}/lib/hamster/hamster/*/__pycache__
+      # as an installed Hamster: no "git describe" for the version
+      - sed -e "s|@DATADIR@|${FLATPAK_DEST}/share|" -e "s|@VERSION@|$(cat src/hamster/VERSION)|"
+        src/hamster/defs.py.in > ${FLATPAK_DEST}/lib/hamster/hamster/defs.py
+      - install -Dm644 src/hamster-service.py ${FLATPAK_DEST}/lib/hamster/hamster-service.py
+      - install -Dm644 data/org.gnome.hamster.gschema.xml -t ${FLATPAK_DEST}/share/glib-2.0/schemas
+      - glib-compile-schemas ${FLATPAK_DEST}/share/glib-2.0/schemas
+      - install -Dm644 data/art/scalable/org.gnome.Hamster.GUI.svg
+        ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
+      - python3 -m compileall -q ${FLATPAK_DEST}/lib/hamster
+    sources:
+      # Until the branch is published: the checkout next to this repository.
+      # Then a `type: git` source with `url`, `branch` and `commit`.
+      - type: dir
+        path: ../../hamster
+        skip:
+          - .git
+          - build
+          - .waf3-*
+
+  - name: hamster-kde
+    buildsystem: simple
+    build-commands:
+      - install -d ${FLATPAK_DEST}/lib/hamster-kde
+      - cp -r app/qml ${FLATPAK_DEST}/lib/hamster-kde/
+      - install -m644 app/hamster-kde app/hamsterbus.py app/reports.py app/report_template.html
+        -t ${FLATPAK_DEST}/lib/hamster-kde
+      - install -Dm755 flatpak/hamster-kde.sh ${FLATPAK_DEST}/bin/hamster-kde
+      - install -Dm755 flatpak/hamster-service.sh ${FLATPAK_DEST}/bin/hamster-service
+      - install -Dm644 flatpak/${FLATPAK_ID}.desktop -t ${FLATPAK_DEST}/share/applications
+      - install -Dm644 flatpak/${FLATPAK_ID}.metainfo.xml -t ${FLATPAK_DEST}/share/metainfo
+      - install -Dm644 COPYING -t ${FLATPAK_DEST}/share/licenses/${FLATPAK_ID}
+    sources:
+      - type: dir
+        path: ..
+        skip:
+          - .git
+          - tests

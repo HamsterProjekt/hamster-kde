@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Before publishing: add <developer>, <url type="homepage">, <url type="bugtracker">
+     and <screenshots>, which a software centre wants, and see the README
+     about the application id. -->
+<component type="desktop-application">
+  <id>org.projecthamster.HamsterKDE</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <name>Hamster Time Tracker for KDE</name>
+  <summary>Track your time, in Markdown files</summary>
+  <description>
+    <p>
+      A port of the Project Hamster time tracker to KDE. It is not an official
+      Project Hamster release.
+    </p>
+    <p>
+      Type what you are doing, and Hamster keeps the time. The overview shows
+      the activities of a day, a week, a month or any range, with totals per
+      category, activity and tag.
+    </p>
+    <ul>
+      <li>Everything is stored in Markdown files that can be read and edited by hand</li>
+      <li>The files can be kept in a folder synchronised between computers; each follows what the others write</li>
+      <li>Reports as HTML, TSV, XML and iCal</li>
+      <li>Provides the Hamster service for the Plasma widget, which is installed separately</li>
+    </ul>
+  </description>
+  <launchable type="desktop-id">org.projecthamster.HamsterKDE.desktop</launchable>
+  <provides>
+    <binary>hamster-kde</binary>
+    <dbus type="user">org.gnome.Hamster</dbus>
+    <dbus type="user">org.gnome.Hamster.WindowServer</dbus>
+  </provides>
+  <categories>
+    <category>Office</category>
+    <category>ProjectManagement</category>
+  </categories>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0" date="2026-11-11">
+      <description>
+        <p>First version packaged as a Flatpak.</p>
+      </description>
+    </release>
+  </releases>
+</component>

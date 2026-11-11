@@ -1,0 +1,19 @@
+[Desktop Entry]
+Type=Application
+Name=Hamster Time Tracker
+GenericName=Time Tracker
+Comment=Overview of your tracked time
+Exec=hamster-kde overview
+Icon=org.projecthamster.HamsterKDE
+Categories=Office;ProjectManagement;Qt;KDE;
+Keywords=time;tracking;timesheet;activity;
+StartupNotify=true
+Actions=add;prefs;
+
+[Desktop Action add]
+Name=Add Activity
+Exec=hamster-kde add
+
+[Desktop Action prefs]
+Name=Tracking Settings
+Exec=hamster-kde prefs
