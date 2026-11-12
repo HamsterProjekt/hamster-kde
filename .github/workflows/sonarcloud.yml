@@ -21,15 +21,13 @@ jobs:
         with:
           # full history, so that new code and blame are right
           fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
       - name: Run the report tests with coverage
+        # With the system Python and Ubuntu's coverage package, not pip.
         run: |
-          pip install coverage
-          coverage run --source=app tests/test_reports.py
-          coverage xml -o coverage.xml
+          sudo apt-get update
+          sudo apt-get install -y python3-coverage
+          python3 -m coverage run --source=app tests/test_reports.py
+          python3 -m coverage xml -o coverage.xml
       - name: Scan
         if: env.SONAR_TOKEN != ''
-        uses: SonarSource/sonarqube-scan-action@v8
+        uses: SonarSource/sonarqube-scan-action@e805d875275f728fac1885b413934be6d7c63f65  # v8.4.1
