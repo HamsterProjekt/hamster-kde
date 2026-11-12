@@ -147,7 +147,11 @@ def _xml(facts):
         activity.setAttribute("tags", ", ".join(fact.tags))
         activities.appendChild(activity)
     doc.appendChild(activities)
-    return doc.toxml(), len(facts)
+    # Before Python 3.13, minidom writes line breaks and tabs in attributes
+    # as they are, and a parser reads them back as spaces. The document has
+    # only attributes, so every such character in it is in a value.
+    xml = doc.toxml().replace("\t", "&#9;").replace("\n", "&#10;").replace("\r", "&#13;")
+    return xml, len(facts)
 
 
 # --- iCal ---
