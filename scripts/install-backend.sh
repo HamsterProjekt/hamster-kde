@@ -89,6 +89,24 @@ dbus-send --session --type=method_call --dest=org.freedesktop.DBus / \
 pkill -u "$(id -u)" -f '^[^ ]*python[0-9.]* [^ ]*hamster-windows-service[.]py' 2>/dev/null || true
 
 reload_bus
+
+# A service that is already running (an earlier installation, or the
+# distribution's Hamster with its SQLite database) keeps answering, and a
+# new one refuses to start next to it: the facts would go on to the old
+# storage. Stop it; D-Bus starts the new one on the next call.
+if busctl --user list 2>/dev/null | grep -q '^org.gnome.Hamster '; then
+    echo "Stopping the Hamster service that is running"
+    stop_service
+fi
+pkill -u "$(id -u)" -f '^[^ ]*python[0-9.]* [^ ]*hamster-service([.]py)?( |$)' 2>/dev/null || true
+
+if [ -n "$(command -v dpkg-query)" ] \
+        && dpkg-query -W -f '${Status}' hamster-time-tracker 2>/dev/null | grep -q 'ok installed'; then
+    echo "Warning: the distribution's Hamster (hamster-time-tracker) is installed." >&2
+    echo "It also provides org.gnome.Hamster, with the SQLite storage; remove it:" >&2
+    echo "    sudo apt remove hamster-time-tracker" >&2
+fi
+
 echo "Installed. Hamster runs from $hamster"
 echo "Facts are stored in $data_home/hamster/markdown, unless another folder"
 echo "is chosen in the tracking settings."
