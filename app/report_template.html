@@ -111,7 +111,7 @@
 
         }
 
-        #date_facts tr:td {
+        #date_facts tr td {
             padding-left: 24px;
         }
 
@@ -142,7 +142,7 @@
         var facts = $facts;
 
         function showChart(target, data) {
-            totals = []
+            var totals = [];
             // turn object into a list of tuples and convert durations from seconds to hours
             var max_duration = 0;
             for (var key in data) {
@@ -317,7 +317,7 @@
                 table.append("<tr><th>" + dateString + "</th><th>" + dateTotal +"</th></tr>");
 
                 for (var key in factTotals) {
-                    keyTotal = Math.round(factTotals[key] / 60 / 60 * 10) / 10;
+                    var keyTotal = Math.round(factTotals[key] / 60 / 60 * 10) / 10;
                     table.append("<tr><td>" + key + "</td><td>" + keyTotal +"</td></tr>");
                 }
 
@@ -376,7 +376,7 @@
 
 
 
-    <table>
+    <table role="presentation">
         <tr style="vertical-align: top">
             <td style="width: 100%">
 
