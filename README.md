@@ -213,6 +213,15 @@ Every merge to `main` builds the Flatpak on GitHub
 at <https://github.com/HamsterProjekt/hamster-kde/releases/latest/download/hamster-kde.flatpak>.
 A change to Hamster itself is picked up by the next build of this repository.
 
+The same bundle is also published under the repository's
+[Packages](https://github.com/HamsterProjekt/hamster-kde/pkgs/container/hamster-kde-flatpak),
+as `ghcr.io/hamsterprojekt/hamster-kde-flatpak`, tagged `latest` and with each
+release's version. Fetch it with [oras](https://oras.land/):
+
+    oras pull ghcr.io/hamsterprojekt/hamster-kde-flatpak:latest
+    flatpak install --user hamster-kde.flatpak
+
+
 The Plasma widget cannot be part of a Flatpak. To use it with the Flatpak:
 
     scripts/install-flatpak-widget.sh
@@ -270,6 +279,16 @@ dbus-python.
     python3 tests/test_reports.py                                  # the report writer alone
 
 To try the real widget in a window: `plasmawindowed io.github.HamsterProjekt.plasmoid`.
+
+## Bugs and questions
+
+Report problems with the widget, the windows or the Flatpak in this
+repository's [Issues](https://github.com/HamsterProjekt/hamster-kde/issues),
+and ask questions or share ideas in its
+[Discussions](https://github.com/HamsterProjekt/hamster-kde/discussions).
+Problems with the Hamster service or the Markdown storage belong in
+[HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster/issues).
+This is not Project Hamster, so please don't report these upstream.
 
 ## Licence
 
