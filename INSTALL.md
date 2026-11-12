@@ -220,18 +220,17 @@ build it yourself.
    sudo apt install flatpak
    ```
 
-2. Clone this repository, for the widget and its installer:
+2. Get the Flatpak, in one of two ways.
+
+   **The latest release.** The runtime comes from Flathub with it. The
+   release also has the widget and its installer:
 
    ```bash
-   git clone https://github.com/HamsterProjekt/hamster-kde.git ~/projects/hamster-kde
+   mkdir -p ~/Downloads/hamster-kde && cd ~/Downloads/hamster-kde
    ```
 
-3. Get the Flatpak, in one of two ways.
-
-   **The latest release.** The runtime comes from Flathub with it:
-
    ```bash
-   wget https://github.com/HamsterProjekt/hamster-kde/releases/latest/download/hamster-kde.flatpak
+   for f in hamster-kde.flatpak hamster-kde.plasmoid install-flatpak-widget.sh; do wget -N "https://github.com/HamsterProjekt/hamster-kde/releases/latest/download/$f"; done
    ```
 
    ```bash
@@ -239,10 +238,14 @@ build it yourself.
    ```
 
    **Built on your computer.** This needs `flatpak-builder`
-   (`sudo apt install flatpak-builder`); the first build downloads the KDE
-   SDK and the PyQt base application, about 2 GB. The Hamster service comes
-   from the `main` branch of
+   (`sudo apt install flatpak-builder`) and a clone of this repository; the
+   first build downloads the KDE SDK and the PyQt base application, about
+   2 GB. The Hamster service comes from the `main` branch of
    [HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster):
+
+   ```bash
+   git clone https://github.com/HamsterProjekt/hamster-kde.git ~/projects/hamster-kde
+   ```
 
    ```bash
    cd ~/projects/hamster-kde && flatpak/build.sh
@@ -253,31 +256,34 @@ build it yourself.
    `hamster-kde.flatpak`, which installs on another computer with
    `flatpak install --user hamster-kde.flatpak`.
 
-4. Start it:
+3. Start it:
 
    ```bash
    flatpak run io.github.HamsterProjekt.HamsterKDE
    ```
 
-5. For the panel widget, which cannot be inside a Flatpak:
+4. For the panel widget, which cannot be inside a Flatpak, run the installer
+   in the folder you downloaded the release to:
 
    ```bash
-   scripts/install-flatpak-widget.sh
+   sh install-flatpak-widget.sh
    ```
 
-   Then add "Hamster Time Tracker" to a panel. This takes the place of
-   `./install.sh`; use one or the other.
+   or, in a clone, `scripts/install-flatpak-widget.sh`, which takes the
+   widget from `plasmoid/`. Then add "Hamster Time Tracker" to a panel. This
+   takes the place of `./install.sh`; use one or the other.
 
 The Flatpak keeps its files in
 `~/.var/app/io.github.HamsterProjekt.HamsterKDE/data/hamster/markdown`, not in
 `~/.local/share/hamster/markdown`. To go on with existing files, choose
 their folder in the tracking settings.
 
-To update, install the latest release again, or pull and run
-`flatpak/build.sh` again. To uninstall:
+To update, download the latest release again and run both `flatpak install`
+and the widget installer, or pull and run `flatpak/build.sh` again. To
+uninstall:
 
 ```bash
-scripts/install-flatpak-widget.sh --uninstall
+sh install-flatpak-widget.sh --uninstall
 ```
 
 ```bash
@@ -299,6 +305,11 @@ upstream Hamster, with upstream's `org.gnome.Hamster` names.
 ```bash
 kpackagetool6 --type Plasma/Applet --install plasmoid
 ```
+
+Without a clone, the same widget is `hamster-kde.plasmoid` in the
+[latest release](https://github.com/HamsterProjekt/hamster-kde/releases/latest):
+`kpackagetool6 --type Plasma/Applet --install hamster-kde.plasmoid`, or
+"Add Widgets… → Get New Widgets → Install Widget From Local File…".
 
 After changes, `--upgrade` in place of `--install`. To remove it:
 

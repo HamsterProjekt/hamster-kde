@@ -5,6 +5,11 @@
 #   scripts/install-flatpak-widget.sh
 #   scripts/install-flatpak-widget.sh --uninstall
 #
+# It installs the widget from plasmoid/ when run from a checkout, or else from
+# hamster-kde.plasmoid in the same folder as this script; both are attached to
+# every Flatpak release, so a checkout is not needed:
+#   sh install-flatpak-widget.sh
+#
 # A Flatpak cannot offer the D-Bus names io.github.HamsterProjekt.Hamster and
 # io.github.HamsterProjekt.Hamster.WindowServer for starting on demand (only names that
 # begin with its own id). This adds the two service files that do, to
@@ -13,7 +18,12 @@
 # Hamster then runs from the Flatpak, not from the source checkout.
 set -e
 id=io.github.HamsterProjekt.HamsterKDE
-here="$(cd "$(dirname "$0")/.." && pwd)"
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+if [ -f "$script_dir/../plasmoid/metadata.json" ]; then
+    widget="$(cd "$script_dir/../plasmoid" && pwd)"
+else
+    widget="$script_dir/hamster-kde.plasmoid"
+fi
 data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
 services="$data_home/dbus-1/services"
 names="io.github.HamsterProjekt.Hamster io.github.HamsterProjekt.Hamster.WindowServer"
@@ -62,7 +72,12 @@ if [ "$1" = "--uninstall" ]; then
 fi
 
 if ! flatpak info "$id" > /dev/null 2>&1; then
-    echo "$id is not installed. Build it first: flatpak/build.sh" >&2
+    echo "$id is not installed. Install the Flatpak first." >&2
+    exit 1
+fi
+if [ ! -e "$widget" ]; then
+    echo "The widget is not here: $widget" >&2
+    echo "Put hamster-kde.plasmoid from the release next to this script." >&2
     exit 1
 fi
 flatpak="$(command -v flatpak)"
@@ -78,8 +93,8 @@ printf '[D-BUS Service]\nName=%s\nExec=%s\n' io.github.HamsterProjekt.Hamster.Wi
 rm -f "$data_home/applications/io.github.HamsterProjekt.hamster-kde.desktop"
 reload_bus
 
-kpackagetool6 --type Plasma/Applet --upgrade "$here/plasmoid" 2>/dev/null \
-    || kpackagetool6 --type Plasma/Applet --install "$here/plasmoid"
+kpackagetool6 --type Plasma/Applet --upgrade "$widget" 2>/dev/null \
+    || kpackagetool6 --type Plasma/Applet --install "$widget"
 echo
 echo "Done. Add 'Hamster Time Tracker' to a panel, if it is not there yet."
 echo "The Flatpak keeps its files in ~/.var/app/$id/data/hamster/markdown,"
