@@ -271,6 +271,16 @@ dbus-python.
 
 To try the real widget in a window: `plasmawindowed io.github.HamsterProjekt.plasmoid`.
 
+## Bugs and questions
+
+Report problems with the widget, the windows or the Flatpak in this
+repository's [Issues](https://github.com/HamsterProjekt/hamster-kde/issues),
+and ask questions or share ideas in its
+[Discussions](https://github.com/HamsterProjekt/hamster-kde/discussions).
+Problems with the Hamster service or the Markdown storage belong in
+[HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster/issues).
+This is not Project Hamster, so please don't report these upstream.
+
 ## Licence
 
 GPL-3.0-or-later, as the code and icons it derives from. See `COPYING`.
