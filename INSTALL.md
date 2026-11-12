@@ -278,6 +278,12 @@ The Flatpak keeps its files in
 `~/.local/share/hamster/markdown`. To go on with existing files, choose
 their folder in the tracking settings.
 
+The Flatpak always runs its own Hamster service, even when D-Bus could start
+another one, such as the one of the Hamster Flatpak with the GTK windows
+(`io.github.HamsterProjekt.Hamster`, with its SQLite database). If another
+service is already running when the windows open, they say so above the
+activities, with a button that puts the Flatpak's own service in its place.
+
 To update, download the latest release again and run both `flatpak install`
 and the widget installer, or pull and run `flatpak/build.sh` again. To
 uninstall:

@@ -244,7 +244,8 @@ This installs the widget and tells D-Bus to start Hamster from the Flatpak
 when the widget asks for it (a Flatpak can only offer names that begin with
 its own id for that, and the widget calls `io.github.HamsterProjekt.Hamster`). It takes the
 place of `scripts/install-backend.sh`; use one or the other. Without it, the
-Flatpak works on its own: the overview starts the service itself.
+Flatpak works on its own: the overview starts the service itself, and never
+lets D-Bus start another installation's (it warns when one already answers).
 
 Things to know:
 
