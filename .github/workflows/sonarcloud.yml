@@ -1,0 +1,35 @@
+# Runs the Python tests that need no Plasma with coverage, and analyses the
+# code on SonarQube Cloud (project HamsterProjekt_hamster-kde).
+# The scan is skipped without the SONAR_TOKEN secret, as in pull requests
+# from forks.
+name: SonarQube Cloud
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  sonarcloud:
+    name: SonarQube Cloud analysis
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - name: Prepare repo
+        uses: actions/checkout@v4
+        with:
+          # full history, so that new code and blame are right
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run the report tests with coverage
+        run: |
+          pip install coverage
+          coverage run --source=app tests/test_reports.py
+          coverage xml -o coverage.xml
+      - name: Scan
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@v8
