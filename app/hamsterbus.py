@@ -225,8 +225,10 @@ class HamsterBus(QObject):
             values = tuple(convert(value) for convert, value in zip(types, arguments))
             parameters = GLib.Variant(signature, values) if types else None
         except (KeyError, TypeError, ValueError) as error:
-            # after this returns, like every other answer
-            GLib.idle_add(lambda: self.failed.emit(call_id, str(error)) and False)
+            # after this returns, like every other answer (and with the
+            # message now: Python unbinds `error` when the except ends)
+            message = str(error)
+            GLib.idle_add(lambda: self.failed.emit(call_id, message) and False)
             return call_id
         self._send(call_id, member, parameters, retry=self._own)
         return call_id
