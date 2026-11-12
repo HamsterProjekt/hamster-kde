@@ -27,13 +27,13 @@ jobs:
       FLATPAK_WORK: ${{ github.workspace }}/../flatpak-work
     steps:
       - name: Prepare repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Install flatpak and flatpak-builder
         run: |
           sudo apt-get update
           sudo apt-get install -y flatpak flatpak-builder
       - name: Cache the downloads of flatpak-builder
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ env.FLATPAK_WORK }}/state
           key: flatpak-state-${{ hashFiles('flatpak/*.yml') }}
@@ -41,7 +41,7 @@ jobs:
       - name: Build and bundle
         run: flatpak/build.sh --no-install --bundle
       - name: Upload the bundle
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: hamster-kde-flatpak
           path: hamster-kde.flatpak
@@ -66,7 +66,7 @@ jobs:
           For the Plasma widget, see scripts/install-flatpak-widget.sh. The runtime comes from Flathub."
       - name: Install oras
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-        uses: oras-project/setup-oras@22ce207df3b08e061f537244349aac6ae1d214f6  # v1.2.4
+        uses: oras-project/setup-oras@5e2f2482b30b0cb3e14e67f89a80c88c659a7c63  # v2.0.3
       - name: Push the bundle to GitHub Packages
         if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         env:
