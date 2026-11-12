@@ -1,5 +1,12 @@
 # Hamster for KDE Plasma
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=HamsterProjekt_hamster-kde&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=HamsterProjekt_hamster-kde)
+[![AI Code Assurance](https://sonarcloud.io/api/project_badges/ai_code_assurance?project=HamsterProjekt_hamster-kde)](https://sonarcloud.io/summary/new_code?id=HamsterProjekt_hamster-kde)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=HamsterProjekt_hamster-kde&metric=coverage)](https://sonarcloud.io/summary/new_code?id=HamsterProjekt_hamster-kde)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=HamsterProjekt_hamster-kde&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=HamsterProjekt_hamster-kde)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=HamsterProjekt_hamster-kde&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=HamsterProjekt_hamster-kde)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=HamsterProjekt_hamster-kde&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=HamsterProjekt_hamster-kde)
+
 A port of the [Project Hamster](https://github.com/projecthamster/hamster)
 time tracker to KDE Plasma, with a backend that stores everything in
 Markdown files. It is part of [HamsterProjekt](https://github.com/HamsterProjekt),
