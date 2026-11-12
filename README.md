@@ -231,10 +231,14 @@ release's version. Fetch it with [oras](https://oras.land/):
     flatpak install --user hamster-kde.flatpak
 
 
-The Plasma widget cannot be part of a Flatpak. To use it with the Flatpak:
+The Plasma widget cannot be part of a Flatpak. Each release also has it as
+`hamster-kde.plasmoid`, with `install-flatpak-widget.sh`; download both into
+one folder and run:
 
-    scripts/install-flatpak-widget.sh
-    scripts/install-flatpak-widget.sh --uninstall
+    sh install-flatpak-widget.sh
+    sh install-flatpak-widget.sh --uninstall
+
+In a clone, `scripts/install-flatpak-widget.sh` does the same with `plasmoid/`.
 
 This installs the widget and tells D-Bus to start Hamster from the Flatpak
 when the widget asks for it (a Flatpak can only offer names that begin with
