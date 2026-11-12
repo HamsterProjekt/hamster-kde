@@ -1,6 +1,8 @@
 # Hamster for KDE Plasma
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=HamsterProjekt_hamster-kde&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=HamsterProjekt_hamster-kde)
+[![SonarQube Cloud](https://github.com/HamsterProjekt/hamster-kde/actions/workflows/sonarcloud.yml/badge.svg?branch=main)](https://github.com/HamsterProjekt/hamster-kde/actions/workflows/sonarcloud.yml?query=branch%3Amain)
+[![Flatpak](https://github.com/HamsterProjekt/hamster-kde/actions/workflows/flatpak.yml/badge.svg?branch=main)](https://github.com/HamsterProjekt/hamster-kde/actions/workflows/flatpak.yml?query=branch%3Amain)
+[![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=HamsterProjekt_hamster-kde&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=HamsterProjekt_hamster-kde)
 [![AI Code Assurance](https://sonarcloud.io/api/project_badges/ai_code_assurance?project=HamsterProjekt_hamster-kde)](https://sonarcloud.io/summary/new_code?id=HamsterProjekt_hamster-kde)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=HamsterProjekt_hamster-kde&metric=coverage)](https://sonarcloud.io/summary/new_code?id=HamsterProjekt_hamster-kde)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=HamsterProjekt_hamster-kde&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=HamsterProjekt_hamster-kde)
