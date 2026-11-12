@@ -21,12 +21,16 @@ jobs:
         with:
           # full history, so that new code and blame are right
           fetch-depth: 0
-      - name: Run the report tests with coverage
-        # With the system Python and Ubuntu's coverage package, not pip.
+      - name: Run the Python tests with coverage
+        # With the system Python and Ubuntu's packages, not pip. PyQt6 and
+        # PyGObject are for app/hamsterbus.py; its tests need no D-Bus.
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-coverage
-          python3 -m coverage run --source=app tests/test_reports.py
+          sudo apt-get install -y python3-coverage python3-gi python3-pyqt6
+          python3 -m coverage erase
+          for test in tests/test_*.py; do
+            python3 -m coverage run --append --source=app "$test"
+          done
           python3 -m coverage xml -o coverage.xml
       - name: Scan
         if: env.SONAR_TOKEN != ''
