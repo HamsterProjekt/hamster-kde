@@ -213,6 +213,15 @@ Every merge to `main` builds the Flatpak on GitHub
 at <https://github.com/HamsterProjekt/hamster-kde/releases/latest/download/hamster-kde.flatpak>.
 A change to Hamster itself is picked up by the next build of this repository.
 
+The same bundle is also published under the repository's
+[Packages](https://github.com/HamsterProjekt/hamster-kde/pkgs/container/hamster-kde-flatpak),
+as `ghcr.io/hamsterprojekt/hamster-kde-flatpak`, tagged `latest` and with each
+release's version. Fetch it with [oras](https://oras.land/):
+
+    oras pull ghcr.io/hamsterprojekt/hamster-kde-flatpak:latest
+    flatpak install --user hamster-kde.flatpak
+
+
 The Plasma widget cannot be part of a Flatpak. To use it with the Flatpak:
 
     scripts/install-flatpak-widget.sh
