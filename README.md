@@ -15,7 +15,7 @@ It has three parts:
   with Qt Quick and Kirigami in place of Hamster's GTK ones, so they follow
   the Plasma theme.
 - **The Markdown backend**: the Hamster service from
-  [a fork of Hamster](https://github.com/atterdag/hamster), which
+  [a fork of Hamster](https://github.com/HamsterProjekt/hamster), which
   keeps the activities in plain Markdown files instead of a database. The
   files can be edited by hand and synchronised between computers.
 
@@ -45,12 +45,12 @@ or the Markdown backend below.
 
 ## Markdown backend
 
-The fork of Hamster at [atterdag/hamster](https://github.com/atterdag/hamster)
+The fork of Hamster at [HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster)
 has `src/hamster/storage/markdown.py`, which stores
 everything in Markdown files instead of SQLite. Get it next to this
 repository:
 
-    git clone https://github.com/atterdag/hamster.git ~/projects/hamster
+    git clone https://github.com/HamsterProjekt/hamster.git ~/projects/hamster
 
 The files it writes:
 
@@ -203,8 +203,8 @@ Things to know:
 - The manifest takes both source trees from this computer (`type: dir`), so
   both repositories have to be cloned next to each other. For a build that
   does not depend on that, name them as `type: git` sources
-  (`https://github.com/atterdag/hamster.git` and
-  `https://github.com/atterdag/hamster-kde.git`) with a `commit`.
+  (`https://github.com/HamsterProjekt/hamster.git` and
+  `https://github.com/HamsterProjekt/hamster-kde.git`) with a `commit`.
 - For Flathub, the id has to change to one under a domain you control
   (`projecthamster.org` is Hamster's; `org.gnome.Hamster` is Hamster's own
   application there), and `flatpak/*.metainfo.xml` needs a developer, a home

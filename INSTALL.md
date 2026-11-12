@@ -40,11 +40,11 @@ mkdir -p ~/projects && cd ~/projects
 ```
 
 ```bash
-git clone https://github.com/atterdag/hamster.git
+git clone https://github.com/HamsterProjekt/hamster.git
 ```
 
 ```bash
-git clone https://github.com/atterdag/hamster-kde.git
+git clone https://github.com/HamsterProjekt/hamster-kde.git
 ```
 
 They can be anywhere. If `hamster` is not next to `hamster-kde`, give its
@@ -290,5 +290,5 @@ busctl --user status org.gnome.Hamster | grep -E 'PID|CommandLine'
 ```
 
 **`./install.sh` says "No Markdown storage in ...".** The path is not a
-checkout of [atterdag/hamster](https://github.com/atterdag/hamster); the
+checkout of [HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster); the
 upstream Hamster does not have the Markdown storage.
