@@ -10,6 +10,11 @@ There are three ways to install it. Pick one:
 
 Everything is installed for your user only, under `~/.local/share`.
 
+**Which storage?** The first two ways store your data in Markdown files, the
+third in Hamster's usual SQLite database. To have the Qt windows *and*
+SQLite, install from the source checkouts with `./install.sh --sqlite`; see
+[Using SQLite instead of Markdown](#using-sqlite-instead-of-markdown).
+
 ## From the source checkouts
 
 ### 1. Install the packages
@@ -79,11 +84,20 @@ cd ~/projects/hamster-kde && ./install.sh
 
 With the Hamster checkout somewhere else: `./install.sh /path/to/hamster`.
 
+This stores your data in Markdown files. For Hamster's SQLite database
+instead, add `--sqlite`:
+
+```bash
+cd ~/projects/hamster-kde && ./install.sh --sqlite
+```
+
+See [Using SQLite instead of Markdown](#using-sqlite-instead-of-markdown).
+
 It writes these, and nothing else:
 
 | File | What it is |
 |---|---|
-| `~/.local/share/dbus-1/services/org.gnome.Hamster.service` | starts the Hamster service on demand, with the Markdown storage |
+| `~/.local/share/dbus-1/services/org.gnome.Hamster.service` | starts the Hamster service on demand, with the chosen storage |
 | `~/.local/share/dbus-1/services/org.gnome.Hamster.WindowServer.service` | starts the windows on demand |
 | `~/.local/share/glib-2.0/schemas/org.gnome.hamster.gschema.xml` | Hamster's settings schema |
 | `~/.local/share/applications/org.projecthamster.hamster-kde.desktop` | "Hamster Time Tracker" in the application menu |
@@ -128,6 +142,9 @@ cd ~/projects/hamster && git pull
 cd ~/projects/hamster-kde && git pull && ./install.sh
 ```
 
+`./install.sh` keeps the storage you chose when you installed, SQLite or
+Markdown.
+
 The running programs keep the old code until they are restarted:
 
 ```bash
@@ -148,9 +165,48 @@ systemctl --user restart plasma-plasmashell.service
 cd ~/projects/hamster-kde && ./install.sh --uninstall
 ```
 
-This removes the files listed in step 4. Your Markdown files in
-`~/.local/share/hamster/markdown` (or the folder you chose) stay. The two
+This removes the files listed in step 4. Your data stays: the Markdown
+files in `~/.local/share/hamster/markdown` (or the folder you chose), and
+the SQLite database `~/.local/share/hamster/hamster.db`. The two
 checkouts can then be deleted.
+
+### Using SQLite instead of Markdown
+
+The Hamster service can keep your data in Markdown files (the default of
+the installer) or in Hamster's usual SQLite database,
+`~/.local/share/hamster/hamster.db`. The widget and the windows work the
+same with both. Choose with an option of the installer:
+
+```bash
+cd ~/projects/hamster-kde && ./install.sh --sqlite
+```
+
+```bash
+cd ~/projects/hamster-kde && ./install.sh --markdown
+```
+
+Use it on a first installation, or at any time to switch. The installer
+stops the running service, and D-Bus starts it again with the new storage
+on the next call. When you later run `./install.sh` without an option, for
+instance to update, it keeps the storage you chose.
+
+The two storages keep separate data. Nothing is converted from one to the
+other, and nothing is deleted when you switch, so switching back brings
+your earlier data back.
+
+To check which storage is used, look at what the service printed when it
+started; the last line is the current one:
+
+```bash
+journalctl --user -b | grep 'storage:'
+```
+
+Under the hood the option only changes the `Exec` line of
+`~/.local/share/dbus-1/services/org.gnome.Hamster.service`: with
+`HAMSTER_STORAGE=markdown` the service uses Markdown, without it SQLite.
+
+The folder setting under "Storage" in the tracking settings only applies to
+the Markdown files; with SQLite it has no effect.
 
 ## As a Flatpak
 

@@ -1,18 +1,26 @@
 #!/bin/sh
 # Sets up, for the current user only, the Hamster services running from a
-# source checkout with the Markdown storage. Nothing needs root.
+# source checkout. Nothing needs root.
 #
-#   scripts/install-backend.sh [path-to-hamster-checkout]   (default: ../hamster)
+#   scripts/install-backend.sh [--markdown|--sqlite] [path-to-hamster-checkout]
+#                                                 (default checkout: ../hamster)
 #   scripts/install-backend.sh --uninstall
+#
+# Storage:
+#   --markdown  facts in Markdown files, ~/.local/share/hamster/markdown/
+#               (see storage/markdown.py), or the folder chosen in the
+#               tracking settings
+#   --sqlite    facts in Hamster's SQLite database,
+#               ~/.local/share/hamster/hamster.db
+#   neither     keep the storage of the current installation; Markdown on a
+#               first installation
 #
 # What it does:
 #   - compiles Hamster's settings schema into ~/.local/share/glib-2.0/schemas
 #   - adds D-Bus service files to ~/.local/share/dbus-1/services, so that
-#     org.gnome.Hamster is started on demand with HAMSTER_STORAGE=markdown,
-#     and the windows (overview, edit, settings) are the Qt ones of app/
+#     org.gnome.Hamster is started on demand with the chosen storage, and the
+#     windows (overview, edit, settings) are the Qt ones of app/
 #   - adds a "Hamster Time Tracker" entry to the application menu
-# The facts go to ~/.local/share/hamster/markdown/ (see storage/markdown.py),
-# or to the folder chosen in the tracking settings.
 
 set -e
 
@@ -34,6 +42,18 @@ stop_service() {
         /org/gnome/Hamster org.gnome.Hamster.Quit 2>/dev/null || true
 }
 
+storage=""
+checkout=""
+for arg in "$@"; do
+    case "$arg" in
+        --markdown) storage=markdown ;;
+        --sqlite) storage=sqlite ;;
+        --uninstall) ;;
+        -*) echo "Unknown option: $arg" >&2; exit 2 ;;
+        *) checkout="$arg" ;;
+    esac
+done
+
 if [ "$1" = "--uninstall" ]; then
     if busctl --user list 2>/dev/null | grep -q '^org.gnome.Hamster '; then
         stop_service
@@ -47,12 +67,24 @@ if [ "$1" = "--uninstall" ]; then
         glib-compile-schemas "$schemas"
     fi
     reload_bus
-    echo "Removed. Your Markdown files in $data_home/hamster/markdown are untouched."
+    echo "Removed. Your data in $data_home/hamster (Markdown files and hamster.db)"
+    echo "and in any folder chosen in the tracking settings is untouched."
     exit 0
 fi
 
 here="$(cd "$(dirname "$0")/.." && pwd)"
-hamster="$(cd "${1:-$here/../hamster}" && pwd)"
+hamster="$(cd "${checkout:-$here/../hamster}" && pwd)"
+
+# Without --markdown or --sqlite, keep what the installed service file says,
+# so that running the installer again to update does not switch storage.
+hamster_service="$services/org.gnome.Hamster.service"
+if [ -z "$storage" ]; then
+    if [ -f "$hamster_service" ] && ! grep -q 'HAMSTER_STORAGE=markdown' "$hamster_service"; then
+        storage=sqlite
+    else
+        storage=markdown
+    fi
+fi
 if [ ! -f "$hamster/src/hamster/storage/markdown.py" ]; then
     echo "No Markdown storage in $hamster (expected src/hamster/storage/markdown.py)" >&2
     exit 1
@@ -66,8 +98,12 @@ python3="$(command -v python3)"
 service_file() {
     printf '[D-BUS Service]\nName=%s\nExec=%s\n' "$1" "$2" > "$services/$1.service"
 }
-service_file org.gnome.Hamster \
-    "/usr/bin/env HAMSTER_STORAGE=markdown $python3 $hamster/src/hamster-service.py"
+if [ "$storage" = markdown ]; then
+    service_file org.gnome.Hamster \
+        "/usr/bin/env HAMSTER_STORAGE=markdown $python3 $hamster/src/hamster-service.py"
+else
+    service_file org.gnome.Hamster "$python3 $hamster/src/hamster-service.py"
+fi
 service_file org.gnome.Hamster.WindowServer \
     "$python3 $here/app/hamster-kde --service"
 rm -f "$services/org.gnome.Hamster.GUI.service"
@@ -108,5 +144,11 @@ if [ -n "$(command -v dpkg-query)" ] \
 fi
 
 echo "Installed. Hamster runs from $hamster"
-echo "Facts are stored in $data_home/hamster/markdown, unless another folder"
-echo "is chosen in the tracking settings."
+if [ "$storage" = markdown ]; then
+    echo "Storage: Markdown. Facts are stored in $data_home/hamster/markdown,"
+    echo "unless another folder is chosen in the tracking settings."
+    echo "(For Hamster's SQLite database instead, run again with --sqlite.)"
+else
+    echo "Storage: SQLite. Facts are stored in $data_home/hamster/hamster.db."
+    echo "(For Markdown files instead, run again with --markdown.)"
+fi

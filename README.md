@@ -65,7 +65,22 @@ The files it writes:
 
 The files can be edited by hand while the service runs; the format is
 described at the top of `markdown.py`. The backend is selected with
-`HAMSTER_STORAGE=markdown`.
+`HAMSTER_STORAGE=markdown`; `./install.sh` sets that up unless you give it
+`--sqlite`.
+
+### Keeping SQLite instead
+
+Markdown is not required. The widget and the windows work the same on
+Hamster's SQLite database, in two ways:
+
+- **With the stock Hamster package:** `sudo apt install hamster-time-tracker`
+  and [install the widget only](#install-the-widget-only). You then get the GTK
+  windows of that package.
+- **With the fork and the Qt windows:** `./install.sh --sqlite`. See
+  [Using SQLite instead of Markdown](INSTALL.md#using-sqlite-instead-of-markdown).
+
+The SQLite database is `~/.local/share/hamster/hamster.db`. It is not
+converted to Markdown files or back: each storage keeps its own data.
 
 ### Storing the files elsewhere
 
@@ -116,7 +131,8 @@ with the distribution package: both provide `org.gnome.Hamster`.
 the steps, updating, uninstalling, the Flatpak, and what to check when
 something does not work. In short, with both repositories cloned:
 
-    ./install.sh ~/projects/hamster      # widget + Markdown backend, for your user
+    ./install.sh ~/projects/hamster            # widget + Markdown backend, for your user
+    ./install.sh --sqlite ~/projects/hamster   # the same, with Hamster's SQLite database
     ./install.sh --uninstall
 
 The sections below describe the two parts separately.

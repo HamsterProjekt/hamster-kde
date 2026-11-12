@@ -1,9 +1,14 @@
 #!/bin/sh
 # Installs everything for the current user: the Plasma widget and the
-# Hamster services with Markdown storage. No root needed.
+# Hamster services. No root needed.
 #
-#   ./install.sh [path-to-hamster-checkout]    (default: ../hamster)
-#   ./install.sh --uninstall                   (keeps your Markdown files)
+#   ./install.sh [--markdown|--sqlite] [path-to-hamster-checkout]
+#                                              (default checkout: ../hamster)
+#   ./install.sh --uninstall                   (keeps your data)
+#
+# --markdown stores the facts in Markdown files, --sqlite in Hamster's SQLite
+# database. With neither, the storage of the current installation is kept;
+# a first installation uses Markdown.
 set -e
 cd "$(dirname "$0")"
 
