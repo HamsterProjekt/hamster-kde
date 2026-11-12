@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""The Hamster service (org.gnome.Hamster) for the QML windows.
+"""The Hamster service (io.github.HamsterProjekt.Hamster) for the QML windows.
 
 Available to QML as `bus`; qml/Backend.qml is what the windows use.
 Calls do not block: the answer comes with the finished or failed signal.
@@ -15,8 +15,8 @@ import time
 from gi.repository import Gio, GLib
 from PyQt6.QtCore import QObject, pyqtProperty, pyqtSignal, pyqtSlot
 
-NAME = "org.gnome.Hamster"
-PATH = "/org/gnome/Hamster"
+NAME = "io.github.HamsterProjekt.Hamster"
+PATH = "/io/github/HamsterProjekt/Hamster"
 # program that runs the service where D-Bus cannot start it (see flatpak/)
 SERVICE_PROGRAM = "hamster-service"
 _TYPES = {"s": str, "i": int, "u": int, "b": bool}

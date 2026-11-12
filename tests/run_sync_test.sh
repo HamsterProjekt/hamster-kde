@@ -11,7 +11,7 @@ OUT="${2:?work directory}"
 rm -rf "$OUT"
 mkdir -p "$OUT/schemas" "$OUT/md"
 OUT="$(cd "$OUT" && pwd)"
-cp "$HAMSTER/data/org.gnome.hamster.gschema.xml" "$OUT/schemas/" && glib-compile-schemas "$OUT/schemas"
+cp "$HAMSTER/data/io.github.HamsterProjekt.Hamster.gschema.xml" "$OUT/schemas/" && glib-compile-schemas "$OUT/schemas"
 
 export HAMSTER OUT
 export GSETTINGS_SCHEMA_DIR="$OUT/schemas" GSETTINGS_BACKEND=memory
@@ -39,11 +39,11 @@ wait_signal() {
 
 python3 "$HAMSTER/src/hamster-service.py" > "$OUT/service.log" 2>&1 &
 sleep 2
-dbus-monitor --session "type=signal,interface=org.gnome.Hamster" > "$OUT/signals.log" 2>/dev/null &
+dbus-monitor --session "type=signal,interface=io.github.HamsterProjekt.Hamster" > "$OUT/signals.log" 2>/dev/null &
 sleep 0.5
 
-dbus-send --session --print-reply --dest=org.gnome.Hamster /org/gnome/Hamster \
-    org.gnome.Hamster.AddFact string:"writing@Work" int32:0 int32:0 boolean:false > /dev/null
+dbus-send --session --print-reply --dest=io.github.HamsterProjekt.Hamster /io/github/HamsterProjekt/Hamster \
+    io.github.HamsterProjekt.Hamster.AddFact string:"writing@Work" int32:0 int32:0 boolean:false > /dev/null
 check "tracking here" [ "$(current)" = writing ]
 start=$(sed -n "s/^- \([0-9:]*\) writing@Work.*/\1/p" "$month")
 now=$(date +%H:%M)
@@ -81,8 +81,8 @@ check "a new month file: clients are told" wait_signal 3
 # 5. what Hamster writes itself is not taken for a change from outside
 mark
 sleep 1
-dbus-send --session --print-reply --dest=org.gnome.Hamster /org/gnome/Hamster \
-    org.gnome.Hamster.AddFact string:"local@Work" int32:0 int32:0 boolean:false > /dev/null
+dbus-send --session --print-reply --dest=io.github.HamsterProjekt.Hamster /io/github/HamsterProjekt/Hamster \
+    io.github.HamsterProjekt.Hamster.AddFact string:"local@Work" int32:0 int32:0 boolean:false > /dev/null
 sleep 1.5
 check "own write: one signal, not two" [ "$(grep -c member=FactsChanged "$OUT/signals.log")" = 1 ]
 check "each change was reported once" [ "$(grep -c "modified externally" "$OUT/service.log")" = 4 ]

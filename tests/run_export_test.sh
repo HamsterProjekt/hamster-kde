@@ -10,7 +10,7 @@ OUT="${2:?work directory}"
 rm -rf "$OUT"
 mkdir -p "$OUT/schemas" "$OUT/md" "$OUT/data" "$OUT/config" "$OUT/reports"
 OUT="$(cd "$OUT" && pwd)"
-cp "$HAMSTER/data/org.gnome.hamster.gschema.xml" "$OUT/schemas/" && glib-compile-schemas "$OUT/schemas"
+cp "$HAMSTER/data/io.github.HamsterProjekt.Hamster.gschema.xml" "$OUT/schemas/" && glib-compile-schemas "$OUT/schemas"
 
 today=$(date +%Y-%m-%d)
 cat > "$OUT/md/$(date +%Y-%m).md" <<MD

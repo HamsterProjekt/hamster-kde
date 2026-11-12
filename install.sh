@@ -12,13 +12,24 @@
 set -e
 cd "$(dirname "$0")"
 
+# The widget was org.projecthamster.plasmoid before the fork had its own
+# names; a panel that has it must get the new one added again.
+remove_legacy_widget() {
+    if kpackagetool6 --type Plasma/Applet --list 2>/dev/null | grep -qx 'org.projecthamster.plasmoid'; then
+        kpackagetool6 --type Plasma/Applet --remove org.projecthamster.plasmoid || true
+        echo "Removed the old widget (org.projecthamster.plasmoid); add the new one to your panel."
+    fi
+}
+
 if [ "$1" = "--uninstall" ]; then
     scripts/install-backend.sh --uninstall
-    kpackagetool6 --type Plasma/Applet --remove org.projecthamster.plasmoid || true
+    kpackagetool6 --type Plasma/Applet --remove io.github.HamsterProjekt.plasmoid || true
+    remove_legacy_widget
     exit 0
 fi
 
 scripts/install-backend.sh "$@"
+remove_legacy_widget
 kpackagetool6 --type Plasma/Applet --upgrade plasmoid 2>/dev/null \
     || kpackagetool6 --type Plasma/Applet --install plasmoid
 echo

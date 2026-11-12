@@ -11,7 +11,7 @@
 # (about 2 GB). Nothing is written into this repository: the build goes to
 # ~/.cache/hamster-kde-flatpak.
 set -e
-id=org.projecthamster.HamsterKDE
+id=io.github.HamsterProjekt.HamsterKDE
 here="$(cd "$(dirname "$0")/.." && pwd)"
 manifest="$here/flatpak/$id.yml"
 work="${XDG_CACHE_HOME:-$HOME/.cache}/hamster-kde-flatpak"

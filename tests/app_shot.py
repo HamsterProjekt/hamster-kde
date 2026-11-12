@@ -37,7 +37,7 @@ properties = {}
 if name == "AddFact":
     name = "EditFact"
 elif name == "EditFact":
-    hamster = QDBusInterface("org.gnome.Hamster", "/org/gnome/Hamster", "org.gnome.Hamster",
+    hamster = QDBusInterface("io.github.HamsterProjekt.Hamster", "/io/github/HamsterProjekt/Hamster", "io.github.HamsterProjekt.Hamster",
                              QDBusConnection.sessionBus())
     facts = hamster.call("GetTodaysFactsJSON").arguments()[0]
     properties["factId"] = json.loads(facts[0])["id"]

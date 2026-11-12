@@ -9,8 +9,8 @@
     hamster-kde --service      wait for requests on D-Bus (used for activation)
 
 The windows are QML (see qml/); the data comes from the Hamster service
-(org.gnome.Hamster) over D-Bus. This program also provides
-org.gnome.Hamster.WindowServer, the interface that panel widgets call to
+(io.github.HamsterProjekt.Hamster) over D-Bus. This program also provides
+io.github.HamsterProjekt.Hamster.WindowServer, the interface that panel widgets call to
 open these windows. Only one instance runs; a second one hands its request
 over to the first and exits.
 """
@@ -37,8 +37,8 @@ sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import reports  # noqa: E402
 from hamsterbus import HamsterBus  # noqa: E402
 
-SERVICE = "org.gnome.Hamster.WindowServer"
-PATH = "/org/gnome/Hamster/WindowServer"
+SERVICE = "io.github.HamsterProjekt.Hamster.WindowServer"
+PATH = "/io/github/HamsterProjekt/Hamster/WindowServer"
 QML_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "qml")
 DEFAULT_DAY_START = 5 * 60 + 30
 DIRECTORY_KEY = "markdown-directory"
@@ -52,7 +52,7 @@ def default_storage_directory():
 
 
 class Settings(QObject):
-    """Hamster's own settings (GSettings schema org.gnome.Hamster).
+    """Hamster's own settings (GSettings schema io.github.HamsterProjekt.Hamster).
 
     The service reads the day start from there, so that is where it has to
     be written. Without the schema, the default is shown and cannot change.
@@ -68,9 +68,9 @@ class Settings(QObject):
         try:
             from gi.repository import Gio
             source = Gio.SettingsSchemaSource.get_default()
-            schema = source.lookup("org.gnome.Hamster", True) if source else None
+            schema = source.lookup("io.github.HamsterProjekt.Hamster", True) if source else None
             if schema:
-                self._settings = Gio.Settings.new("org.gnome.Hamster")
+                self._settings = Gio.Settings.new("io.github.HamsterProjekt.Hamster")
                 self._has_directory_key = schema.has_key(DIRECTORY_KEY)
         except ImportError:
             pass
@@ -142,8 +142,8 @@ class Settings(QObject):
         Gio.Settings.sync()
 
         # the service reads the folder when it starts
-        quit_call = QDBusMessage.createMethodCall("org.gnome.Hamster", "/org/gnome/Hamster",
-                                                  "org.gnome.Hamster", "Quit")
+        quit_call = QDBusMessage.createMethodCall("io.github.HamsterProjekt.Hamster", "/io/github/HamsterProjekt/Hamster",
+                                                  "io.github.HamsterProjekt.Hamster", "Quit")
         quit_call.setAutoStartService(False)
         QDBusConnection.sessionBus().call(quit_call)
         self.storageDirectoryChanged.emit()
@@ -302,7 +302,7 @@ class Windows(QObject):
 
 @pyqtClassInfo("D-Bus Interface", SERVICE)
 class WindowServer(QDBusAbstractAdaptor):
-    """org.gnome.Hamster.WindowServer, as provided by Hamster's own GUI."""
+    """io.github.HamsterProjekt.Hamster.WindowServer, as provided by Hamster's own GUI."""
 
     def __init__(self, windows):
         super().__init__(windows)
@@ -378,7 +378,7 @@ def main():
     app.setApplicationName("hamster-kde")
     app.setApplicationDisplayName("Hamster")
     # as a Flatpak, the desktop file and the icon are named after the application id
-    app.setDesktopFileName(flatpak_id or "org.projecthamster.hamster-kde")
+    app.setDesktopFileName(flatpak_id or "io.github.HamsterProjekt.hamster-kde")
     app.setWindowIcon(QIcon.fromTheme(flatpak_id or "chronometer", QIcon.fromTheme("chronometer")))
     app.setQuitOnLastWindowClosed(False)
     signal.signal(signal.SIGINT, signal.SIG_DFL)

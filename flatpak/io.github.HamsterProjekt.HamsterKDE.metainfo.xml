@@ -3,7 +3,7 @@
      and <screenshots>, which a software centre wants, and see the README
      about the application id. -->
 <component type="desktop-application">
-  <id>org.projecthamster.HamsterKDE</id>
+  <id>io.github.HamsterProjekt.HamsterKDE</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
   <name>Hamster Time Tracker for KDE</name>
@@ -25,11 +25,11 @@
       <li>Provides the Hamster service for the Plasma widget, which is installed separately</li>
     </ul>
   </description>
-  <launchable type="desktop-id">org.projecthamster.HamsterKDE.desktop</launchable>
+  <launchable type="desktop-id">io.github.HamsterProjekt.HamsterKDE.desktop</launchable>
   <provides>
     <binary>hamster-kde</binary>
-    <dbus type="user">org.gnome.Hamster</dbus>
-    <dbus type="user">org.gnome.Hamster.WindowServer</dbus>
+    <dbus type="user">io.github.HamsterProjekt.Hamster</dbus>
+    <dbus type="user">io.github.HamsterProjekt.Hamster.WindowServer</dbus>
   </provides>
   <categories>
     <category>Office</category>
