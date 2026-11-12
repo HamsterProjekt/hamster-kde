@@ -17,7 +17,7 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - name: Prepare repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # full history, so that new code and blame are right
           fetch-depth: 0
