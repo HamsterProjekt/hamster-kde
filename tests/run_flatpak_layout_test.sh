@@ -11,7 +11,7 @@ OUT="${2:?work directory}"
 rm -rf "$OUT"
 mkdir -p "$OUT/app" "$OUT/home/data" "$OUT/home/config"
 OUT="$(cd "$OUT" && pwd)"
-ID=org.projecthamster.HamsterKDE
+ID=io.github.HamsterProjekt.HamsterKDE
 
 # the build commands of a module, one per line
 commands() {
@@ -56,21 +56,21 @@ check "what the manifest installs is there" test -x "$app/bin/hamster-kde" -a -x
     -a -f "$app/share/icons/hicolor/scalable/apps/$ID.svg"
 check "desktop file" desktop-file-validate "$app/share/applications/$ID.desktop"
 check "its program and icon are the installed ones" sh -c "grep -q \"^Exec=hamster-kde \" \"$app/share/applications/$ID.desktop\" && grep -qx \"Icon=$ID\" \"$app/share/applications/$ID.desktop\""
-check "the storage folder setting is in the schema" grep -q markdown-directory "$app/share/glib-2.0/schemas/org.gnome.hamster.gschema.xml"
+check "the storage folder setting is in the schema" grep -q markdown-directory "$app/share/glib-2.0/schemas/io.github.HamsterProjekt.Hamster.gschema.xml"
 check "nothing of the tests or of git is installed" sh -c "! find \"$app\" -name tests -o -name .git | grep -q ."
 
 # nothing can start the service on this bus: the windows do it themselves
-check "no service yet" sh -c "! dbus-send --session --print-reply --dest=org.freedesktop.DBus / org.freedesktop.DBus.NameHasOwner string:org.gnome.Hamster | grep -q \"boolean true\""
+check "no service yet" sh -c "! dbus-send --session --print-reply --dest=org.freedesktop.DBus / org.freedesktop.DBus.NameHasOwner string:io.github.HamsterProjekt.Hamster | grep -q \"boolean true\""
 PATH="$app/bin:$PATH" FLATPAK_ID="$ID" hamster-kde overview > "$OUT/windows.log" 2>&1 &
 windows=$!
 n=0
-while [ $n -lt 80 ] && ! owner org.gnome.Hamster.WindowServer; do sleep 0.1; n=$((n + 1)); done
-check "the windows start" owner org.gnome.Hamster.WindowServer
+while [ $n -lt 80 ] && ! owner io.github.HamsterProjekt.Hamster.WindowServer; do sleep 0.1; n=$((n + 1)); done
+check "the windows start" owner io.github.HamsterProjekt.Hamster.WindowServer
 n=0
-while [ $n -lt 100 ] && ! owner org.gnome.Hamster; do sleep 0.1; n=$((n + 1)); done
-check "they started the service" owner org.gnome.Hamster
-dbus-send --session --print-reply --dest=org.gnome.Hamster /org/gnome/Hamster \
-    org.gnome.Hamster.AddFact string:"packaging@Work" int32:0 int32:0 boolean:false > /dev/null 2>&1
+while [ $n -lt 100 ] && ! owner io.github.HamsterProjekt.Hamster; do sleep 0.1; n=$((n + 1)); done
+check "they started the service" owner io.github.HamsterProjekt.Hamster
+dbus-send --session --print-reply --dest=io.github.HamsterProjekt.Hamster /io/github/HamsterProjekt/Hamster \
+    io.github.HamsterProjekt.Hamster.AddFact string:"packaging@Work" int32:0 int32:0 boolean:false > /dev/null 2>&1
 check "the service is the Markdown one, writing to the data directory" \
     grep -q "packaging@Work" "$XDG_DATA_HOME/hamster/markdown/$(date +%Y-%m).md"
 check "it says it is installed (no git needed for its version)" sh -c "cd / && PYTHONPATH=\"$app/lib/hamster\" python3 -c \"import hamster; assert hamster.installed, hamster.__version__\""

@@ -1,0 +1,61 @@
+# Builds the Flatpak (flatpak/build.sh), with the Hamster service from the
+# main branch of HamsterProjekt/hamster. Pull requests get the bundle as a
+# build artifact; every merge to main also publishes it as a new release, so
+# that the latest one is always at
+# https://github.com/HamsterProjekt/hamster-kde/releases/latest/download/hamster-kde.flatpak
+name: Flatpak
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: flatpak-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flatpak:
+    name: Build the Flatpak
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write   # to publish the release
+    env:
+      FLATPAK_WORK: ${{ github.workspace }}/../flatpak-work
+    steps:
+      - name: Prepare repo
+        uses: actions/checkout@v4
+      - name: Install flatpak and flatpak-builder
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+      - name: Cache the downloads of flatpak-builder
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.FLATPAK_WORK }}/state
+          key: flatpak-state-${{ hashFiles('flatpak/*.yml') }}
+          restore-keys: flatpak-state-
+      - name: Build and bundle
+        run: flatpak/build.sh --no-install --bundle
+      - name: Upload the bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: hamster-kde-flatpak
+          path: hamster-kde.flatpak
+      - name: Publish a release
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(date -u +%Y.%m.%d).${{ github.run_number }}"
+          hamster="$(git ls-remote https://github.com/HamsterProjekt/hamster.git refs/heads/main | cut -f1)"
+          gh release create "flatpak-$version" hamster-kde.flatpak \
+            --target "$GITHUB_SHA" --latest \
+            --title "Hamster for KDE $version (Flatpak)" \
+            --notes "Flatpak of Hamster for KDE, built from $GITHUB_SHA with the Hamster service of HamsterProjekt/hamster $hamster.
+
+          Install it for your user with:
+
+              flatpak install --user hamster-kde.flatpak
+
+          For the Plasma widget, see scripts/install-flatpak-widget.sh. The runtime comes from Flathub."

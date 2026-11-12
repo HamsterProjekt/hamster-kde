@@ -2,13 +2,13 @@
     "KPackageStructure": "Plasma/Applet",
     "KPlugin": {
         "Category": "Date and Time",
-        "Description": "Track your time with Project Hamster",
+        "Description": "Track your time with HamsterProjekt",
         "Icon": "chronometer",
-        "Id": "org.projecthamster.plasmoid",
+        "Id": "io.github.HamsterProjekt.plasmoid",
         "License": "GPL-3.0-or-later",
         "Name": "Hamster Time Tracker",
         "Version": "0.1.0",
-        "Website": "https://github.com/projecthamster/hamster"
+        "Website": "https://github.com/HamsterProjekt/hamster-kde"
     },
     "X-Plasma-API-Minimum-Version": "6.0"
 }

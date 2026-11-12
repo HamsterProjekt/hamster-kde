@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Talks to the Hamster D-Bus services (org.gnome.Hamster and
-// org.gnome.Hamster.WindowServer). Any backend that implements those
+// Talks to the Hamster D-Bus services (io.github.HamsterProjekt.Hamster and
+// io.github.HamsterProjekt.Hamster.WindowServer). Any backend that implements those
 // interfaces works, whatever it stores its facts in.
 
 import QtQuick
@@ -24,10 +24,10 @@ Item {
     // Last failure, as text for the user; cleared by the next success.
     property string lastError: ""
 
-    readonly property string apiService: "org.gnome.Hamster"
-    readonly property string apiPath: "/org/gnome/Hamster"
-    readonly property string windowService: "org.gnome.Hamster.WindowServer"
-    readonly property string windowPath: "/org/gnome/Hamster/WindowServer"
+    readonly property string apiService: "io.github.HamsterProjekt.Hamster"
+    readonly property string apiPath: "/io/github/HamsterProjekt/Hamster"
+    readonly property string windowService: "io.github.HamsterProjekt.Hamster.WindowServer"
+    readonly property string windowPath: "/io/github/HamsterProjekt/Hamster/WindowServer"
 
     function call(service, path, member, signature, args, onSuccess, what) {
         const message = {

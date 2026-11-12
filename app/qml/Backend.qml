@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// The Hamster service (org.gnome.Hamster) over D-Bus, through `bus`
+// The Hamster service (io.github.HamsterProjekt.Hamster) over D-Bus, through `bus`
 // (hamsterbus.py).
 
 import QtQuick

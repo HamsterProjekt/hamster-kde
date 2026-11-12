@@ -3,10 +3,12 @@
 # widgets cannot be Flatpaks); see scripts/install-flatpak-widget.sh.
 #
 # Build and install for your user:   flatpak/build.sh
+# On every merge to main, .github/workflows/flatpak.yml builds it and
+# publishes the bundle as a release.
 #
-# The application id is not org.gnome.Hamster: that one is Hamster's own
-# application on Flathub.
-app-id: org.projecthamster.HamsterKDE
+# The application id is not io.github.HamsterProjekt.Hamster: that is the
+# id of HamsterProjekt's Hamster with its GTK windows (HamsterProjekt/hamster).
+app-id: io.github.HamsterProjekt.HamsterKDE
 runtime: org.kde.Platform
 runtime-version: '6.11'
 sdk: org.kde.Sdk
@@ -22,8 +24,8 @@ finish-args:
   - --device=dri
   # the names of the Hamster service and of its windows, which the Plasma
   # widget (and any other Hamster client) calls
-  - --own-name=org.gnome.Hamster
-  - --own-name=org.gnome.Hamster.WindowServer
+  - --own-name=io.github.HamsterProjekt.Hamster
+  - --own-name=io.github.HamsterProjekt.Hamster.WindowServer
   # the Markdown files may be kept anywhere (a folder synchronised by
   # OneDrive, Dropbox, ...), and reports are saved where the user says
   - --filesystem=home
@@ -57,8 +59,9 @@ modules:
         url: https://dbus.freedesktop.org/releases/dbus-python/dbus-python-1.4.0.tar.xz
         sha256: c36b28f10ffcc8f1f798aca973bcc132f91f33eb9b6b8904381b4077766043d5
 
-  # The service and the storage of Hamster, branch main of the checkout.
-  # Its GTK windows are not installed.
+  # The service and the storage of Hamster, from the main branch of
+  # HamsterProjekt/hamster. Its GTK windows are not installed.
+  # `flatpak/build.sh PATH` takes a local checkout instead.
   - name: hamster
     buildsystem: simple
     build-commands:
@@ -69,20 +72,15 @@ modules:
       - sed -e "s|@DATADIR@|${FLATPAK_DEST}/share|" -e "s|@VERSION@|$(cat src/hamster/VERSION)|"
         src/hamster/defs.py.in > ${FLATPAK_DEST}/lib/hamster/hamster/defs.py
       - install -Dm644 src/hamster-service.py ${FLATPAK_DEST}/lib/hamster/hamster-service.py
-      - install -Dm644 data/org.gnome.hamster.gschema.xml -t ${FLATPAK_DEST}/share/glib-2.0/schemas
+      - install -Dm644 data/io.github.HamsterProjekt.Hamster.gschema.xml -t ${FLATPAK_DEST}/share/glib-2.0/schemas
       - glib-compile-schemas ${FLATPAK_DEST}/share/glib-2.0/schemas
-      - install -Dm644 data/art/scalable/org.gnome.Hamster.GUI.svg
+      - install -Dm644 data/art/scalable/io.github.HamsterProjekt.Hamster.GUI.svg
         ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
       - python3 -m compileall -q ${FLATPAK_DEST}/lib/hamster
     sources:
-      # Until the branch is published: the checkout next to this repository.
-      # Then a `type: git` source with `url`, `branch` and `commit`.
-      - type: dir
-        path: ../../hamster
-        skip:
-          - .git
-          - build
-          - .waf3-*
+      - type: git
+        url: https://github.com/HamsterProjekt/hamster.git
+        branch: main
 
   - name: hamster-kde
     buildsystem: simple
@@ -97,8 +95,11 @@ modules:
       - install -Dm644 flatpak/${FLATPAK_ID}.metainfo.xml -t ${FLATPAK_DEST}/share/metainfo
       - install -Dm644 COPYING -t ${FLATPAK_DEST}/share/licenses/${FLATPAK_ID}
     sources:
+      # this checkout (the manifest is in flatpak/)
       - type: dir
         path: ..
         skip:
           - .git
           - tests
+          - .flatpak-builder
+          - hamster-kde.flatpak

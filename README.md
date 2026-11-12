@@ -2,7 +2,8 @@
 
 A port of the [Project Hamster](https://github.com/projecthamster/hamster)
 time tracker to KDE Plasma, with a backend that stores everything in
-Markdown files. It is not an official Project Hamster release.
+Markdown files. It is part of [HamsterProjekt](https://github.com/HamsterProjekt),
+and is not an official Project Hamster release.
 
 It has three parts:
 
@@ -15,12 +16,14 @@ It has three parts:
   with Qt Quick and Kirigami in place of Hamster's GTK ones, so they follow
   the Plasma theme.
 - **The Markdown backend**: the Hamster service from
-  [a fork of Hamster](https://github.com/atterdag/hamster), which
+  [a fork of Hamster](https://github.com/HamsterProjekt/hamster), which
   keeps the activities in plain Markdown files instead of a database. The
   files can be edited by hand and synchronised between computers.
 
-Hamster's data model, D-Bus interface and way of entering activities are
-unchanged.
+Hamster's data model, D-Bus methods and way of entering activities are
+unchanged. The D-Bus names are HamsterProjekt's own
+(`io.github.HamsterProjekt.Hamster` instead of upstream's
+`org.gnome.Hamster`), so upstream Hamster can stay installed next to it.
 
 ## How it fits together
 
@@ -28,11 +31,14 @@ The widget stores nothing itself. It talks over D-Bus to a Hamster backend:
 
 | Service | Used for |
 |---|---|
-| `org.gnome.Hamster` | `GetTodaysFactsJSON`, `GetActivities`, `AddFact`, `StopTracking`, and the `FactsChanged`, `TagsChanged` and `ActivitiesChanged` signals |
-| `org.gnome.Hamster.WindowServer` | `edit`, `overview`, `preferences` (the overview, edit and settings windows) |
+| `io.github.HamsterProjekt.Hamster` | `GetTodaysFactsJSON`, `GetActivities`, `AddFact`, `StopTracking`, and the `FactsChanged`, `TagsChanged` and `ActivitiesChanged` signals |
+| `io.github.HamsterProjekt.Hamster.WindowServer` | `edit`, `overview`, `preferences` (the overview, edit and settings windows) |
 
-Any backend that provides these works: the stock Hamster package (SQLite),
-or the Markdown backend below.
+They are provided by the Hamster service of
+[HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster), with the
+Markdown backend below or with SQLite. The stock Hamster package
+(`hamster-time-tracker`) provides upstream's `org.gnome.Hamster` instead, so
+the widget does not use it.
 
 ## Requirements
 
@@ -40,17 +46,17 @@ or the Markdown backend below.
   for the widget
 - for the windows of `app/`: Python 3 with PyQt6 and PyGObject, Kirigami and
   Qt Quick Controls
-- A Hamster backend: either `sudo apt install hamster-time-tracker`, or the
-  Markdown backend
+- The Hamster service of [HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster),
+  with Markdown or SQLite storage
 
 ## Markdown backend
 
-The fork of Hamster at [atterdag/hamster](https://github.com/atterdag/hamster)
+The fork of Hamster at [HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster)
 has `src/hamster/storage/markdown.py`, which stores
 everything in Markdown files instead of SQLite. Get it next to this
 repository:
 
-    git clone https://github.com/atterdag/hamster.git ~/projects/hamster
+    git clone https://github.com/HamsterProjekt/hamster.git ~/projects/hamster
 
 The files it writes:
 
@@ -65,7 +71,23 @@ The files it writes:
 
 The files can be edited by hand while the service runs; the format is
 described at the top of `markdown.py`. The backend is selected with
-`HAMSTER_STORAGE=markdown`.
+`HAMSTER_STORAGE=markdown`; `./install.sh` sets that up unless you give it
+`--sqlite`.
+
+### Keeping SQLite instead
+
+Markdown is not required. The widget and the windows work the same on
+Hamster's SQLite database, in two ways:
+
+- **With the fork's GTK windows:** install
+  [HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster) system-wide
+  (see its INSTALL.md, "System-wide with waf") and
+  [install the widget only](#install-the-widget-only).
+- **With the Qt windows:** `./install.sh --sqlite`. See
+  [Using SQLite instead of Markdown](INSTALL.md#using-sqlite-instead-of-markdown).
+
+The SQLite database is `~/.local/share/hamster/hamster.db`. It is not
+converted to Markdown files or back: each storage keeps its own data.
 
 ### Storing the files elsewhere
 
@@ -78,7 +100,7 @@ and the originals stay where they were. "Use Default" goes back.
 
 The folder has to be a local one, that is, the place where the sync client
 keeps its copy. The setting is the `markdown-directory` key of the
-`org.gnome.Hamster` settings; the `HAMSTER_MARKDOWN_DIR` environment variable
+`io.github.HamsterProjekt.Hamster` settings; the `HAMSTER_MARKDOWN_DIR` environment variable
 overrides it. If the folder cannot be created when the service starts (a
 drive that is not mounted), the service does not start, rather than writing
 somewhere else.
@@ -107,8 +129,9 @@ the distribution package:
 
 This adds on-demand D-Bus services under `~/.local/share/dbus-1/services`
 and Hamster's settings schema under `~/.local/share/glib-2.0/schemas`. It
-needs Python 3 with PyGObject and dbus-python (GTK is not needed). Do not combine it
-with the distribution package: both provide `org.gnome.Hamster`.
+needs Python 3 with PyGObject and dbus-python (GTK is not needed). The
+distribution package can stay installed: it provides upstream's
+`org.gnome.Hamster`, not `io.github.HamsterProjekt.Hamster`.
 
 ## Quick install
 
@@ -116,7 +139,8 @@ with the distribution package: both provide `org.gnome.Hamster`.
 the steps, updating, uninstalling, the Flatpak, and what to check when
 something does not work. In short, with both repositories cloned:
 
-    ./install.sh ~/projects/hamster      # widget + Markdown backend, for your user
+    ./install.sh ~/projects/hamster            # widget + Markdown backend, for your user
+    ./install.sh --sqlite ~/projects/hamster   # the same, with Hamster's SQLite database
     ./install.sh --uninstall
 
 The sections below describe the two parts separately.
@@ -141,7 +165,7 @@ Plasma theme. They replace Hamster's GTK windows:
     app/hamster-kde prefs
 
 `hamster-kde` is a small PyQt6 launcher. It also provides
-`org.gnome.Hamster.WindowServer`, which is what the widget calls, and is
+`io.github.HamsterProjekt.Hamster.WindowServer`, which is what the widget calls, and is
 started on demand once `scripts/install-backend.sh` has run. The installer
 also adds "Hamster Time Tracker" to the application menu.
 
@@ -171,15 +195,23 @@ reject. Times are written as local time without a time zone.
 ## Flatpak
 
 `flatpak/` has what is needed to build the windows and the Hamster service
-with the Markdown storage as one Flatpak, `org.projecthamster.HamsterKDE`:
+with the Markdown storage as one Flatpak, `io.github.HamsterProjekt.HamsterKDE`:
 
     flatpak/build.sh                      # builds, and installs for your user
+    flatpak/build.sh ../hamster           # the same, with a local Hamster checkout
     flatpak/build.sh --bundle             # also writes hamster-kde.flatpak
-    flatpak run org.projecthamster.HamsterKDE
+    flatpak run io.github.HamsterProjekt.HamsterKDE
 
-It needs `flatpak-builder` (`sudo apt install flatpak-builder`) and takes the
-Hamster checkout from `../hamster` (another path can be given). The first
-build downloads the KDE SDK and the PyQt base application, about 2 GB.
+It needs `flatpak-builder` (`sudo apt install flatpak-builder`). The Hamster
+service comes from the `main` branch of
+[HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster), unless a
+local checkout is given. The first build downloads the KDE SDK and the PyQt
+base application, about 2 GB.
+
+Every merge to `main` builds the Flatpak on GitHub
+(`.github/workflows/flatpak.yml`) and publishes it as a release; the latest is
+at <https://github.com/HamsterProjekt/hamster-kde/releases/latest/download/hamster-kde.flatpak>.
+A change to Hamster itself is picked up by the next build of this repository.
 
 The Plasma widget cannot be part of a Flatpak. To use it with the Flatpak:
 
@@ -188,29 +220,27 @@ The Plasma widget cannot be part of a Flatpak. To use it with the Flatpak:
 
 This installs the widget and tells D-Bus to start Hamster from the Flatpak
 when the widget asks for it (a Flatpak can only offer names that begin with
-its own id for that, and the widget calls `org.gnome.Hamster`). It takes the
+its own id for that, and the widget calls `io.github.HamsterProjekt.Hamster`). It takes the
 place of `scripts/install-backend.sh`; use one or the other. Without it, the
 Flatpak works on its own: the overview starts the service itself.
 
 Things to know:
 
 - The Flatpak keeps its files in
-  `~/.var/app/org.projecthamster.HamsterKDE/data/hamster/markdown`, not in
+  `~/.var/app/io.github.HamsterProjekt.HamsterKDE/data/hamster/markdown`, not in
   `~/.local/share/hamster/markdown`. To go on with existing files, choose
   their folder in the tracking settings; the setting is the Flatpak's own too.
 - It may read and write your home directory (`--filesystem=home`), so that
   the files can be in any folder, and reports saved anywhere.
-- The manifest takes both source trees from this computer (`type: dir`), so
-  both repositories have to be cloned next to each other. For a build that
-  does not depend on that, name them as `type: git` sources
-  (`https://github.com/atterdag/hamster.git` and
-  `https://github.com/atterdag/hamster-kde.git`) with a `commit`.
-- For Flathub, the id has to change to one under a domain you control
-  (`projecthamster.org` is Hamster's; `org.gnome.Hamster` is Hamster's own
-  application there), and `flatpak/*.metainfo.xml` needs a developer, a home
-  page and screenshots. The id is in the names of the files in `flatpak/`,
-  in the manifest, the desktop file, the metainfo file, `flatpak/build.sh`
-  and `scripts/install-flatpak-widget.sh`.
+- The manifest takes this repository from the checkout (`type: dir`) and
+  Hamster from GitHub (`type: git`, branch `main`). For Flathub, both have to
+  be `type: git` sources with a `commit`.
+- The id `io.github.HamsterProjekt.HamsterKDE` follows Flathub's rule for
+  projects hosted on GitHub. For Flathub, `flatpak/*.metainfo.xml` still
+  needs a developer, a home page and screenshots.
+- Before the rename to HamsterProjekt's names the Flatpak was
+  `org.projecthamster.HamsterKDE`; see "Upgrading from the old names" in
+  [INSTALL.md](INSTALL.md#upgrading-from-the-old-names).
 
 `tests/run_flatpak_layout_test.sh ~/projects/hamster /tmp/hamster-layout`
 runs the install steps of the manifest into a directory and starts Hamster
@@ -239,7 +269,7 @@ dbus-python.
     tests/run_export_test.sh ~/projects/hamster /tmp/hamster-export # exports in every format
     python3 tests/test_reports.py                                  # the report writer alone
 
-To try the real widget in a window: `plasmawindowed org.projecthamster.plasmoid`.
+To try the real widget in a window: `plasmawindowed io.github.HamsterProjekt.plasmoid`.
 
 ## Licence
 

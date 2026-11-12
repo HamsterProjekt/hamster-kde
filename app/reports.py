@@ -176,7 +176,7 @@ def _ical_line(name, value):
 def _ical(facts):
     stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     local = "%Y%m%dT%H%M%S"   # no time zone: the time of the wall clock
-    out = ["BEGIN:VCALENDAR\r\n", "VERSION:2.0\r\n", "PRODID:-//Project Hamster//hamster-kde//EN\r\n"]
+    out = ["BEGIN:VCALENDAR\r\n", "VERSION:2.0\r\n", "PRODID:-//HamsterProjekt//hamster-kde//EN\r\n"]
     written = 0
     for fact in facts:
         if not fact.end:   # an ongoing activity is not an event yet

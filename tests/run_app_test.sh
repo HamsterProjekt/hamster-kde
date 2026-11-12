@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.." || exit 1
 HAMSTER="$(cd "${1:?path to the hamster checkout}" && pwd)"
 OUT="${2:?output directory}"
 mkdir -p "$OUT/schemas" "$OUT/md"
-cp "$HAMSTER/data/org.gnome.hamster.gschema.xml" "$OUT/schemas/" && glib-compile-schemas "$OUT/schemas"
+cp "$HAMSTER/data/io.github.HamsterProjekt.Hamster.gschema.xml" "$OUT/schemas/" && glib-compile-schemas "$OUT/schemas"
 
 today=$(date +%Y-%m-%d)
 yesterday=$(date -d yesterday +%Y-%m-%d)

@@ -11,11 +11,11 @@ OUT="${2:?work directory}"
 rm -rf "$OUT"
 mkdir -p "$OUT/data/glib-2.0/schemas" "$OUT/data/dbus-1/services" "$OUT/config" "$OUT/cloud folder"
 OUT="$(cd "$OUT" && pwd)"
-cp "$HAMSTER/data/org.gnome.hamster.gschema.xml" "$OUT/data/glib-2.0/schemas/" \
+cp "$HAMSTER/data/io.github.HamsterProjekt.Hamster.gschema.xml" "$OUT/data/glib-2.0/schemas/" \
     && glib-compile-schemas "$OUT/data/glib-2.0/schemas"
-printf '[D-BUS Service]\nName=org.gnome.Hamster\nExec=%s %s\n' \
+printf '[D-BUS Service]\nName=io.github.HamsterProjekt.Hamster\nExec=%s %s\n' \
     "$(command -v python3)" "$HAMSTER/src/hamster-service.py" \
-    > "$OUT/data/dbus-1/services/org.gnome.Hamster.service"
+    > "$OUT/data/dbus-1/services/io.github.HamsterProjekt.Hamster.service"
 
 export HAMSTER OUT
 export XDG_DATA_HOME="$OUT/data" XDG_CONFIG_HOME="$OUT/config"
@@ -33,8 +33,8 @@ check() {  # check DESCRIPTION COMMAND...
     if "$@" > /dev/null 2>&1; then echo "ok    $what"; else echo "FAIL  $what"; failures=$((failures + 1)); fi
 }
 add_fact() {
-    dbus-send --session --print-reply --dest=org.gnome.Hamster /org/gnome/Hamster \
-        org.gnome.Hamster.AddFact string:"$1" int32:0 int32:0 boolean:false > /dev/null
+    dbus-send --session --print-reply --dest=io.github.HamsterProjekt.Hamster /io/github/HamsterProjekt/Hamster \
+        io.github.HamsterProjekt.Hamster.AddFact string:"$1" int32:0 int32:0 boolean:false > /dev/null
 }
 
 add_fact "08:00 - 09:00 first@Work"
@@ -66,7 +66,7 @@ python3 tests/app_shot.py Preferences "$OUT/refused.png" \
 add_fact "11:00 - 12:00 fourth@Work"
 check "an unusable folder is refused" grep -q "fourth@Work" "$default/$month"
 
-dbus-send --session --dest=org.gnome.Hamster /org/gnome/Hamster org.gnome.Hamster.Quit 2>/dev/null
+dbus-send --session --dest=io.github.HamsterProjekt.Hamster /io/github/HamsterProjekt/Hamster io.github.HamsterProjekt.Hamster.Quit 2>/dev/null
 # what was started on this bus (portals, for the folder dialog) would stay
 for p in /proc/[0-9]*; do
     pid=${p#/proc/}

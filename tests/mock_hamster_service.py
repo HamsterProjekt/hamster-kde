@@ -6,7 +6,7 @@ without Hamster installed.
 Implements only what the plasmoid calls. Facts live in memory. Run it on a
 private bus so it never collides with a real Hamster:
 
-    dbus-run-session -- sh -c 'python3 tests/mock_hamster_service.py & plasmawindowed org.projecthamster.plasmoid'
+    dbus-run-session -- sh -c 'python3 tests/mock_hamster_service.py & plasmawindowed io.github.HamsterProjekt.plasmoid'
 """
 
 import datetime as dt
@@ -29,8 +29,8 @@ def log(*args):
 class Hamster(dbus.service.Object):
     def __init__(self, bus):
         # (dbus.service.Object uses self._name itself, so not that name)
-        self.bus_name = dbus.service.BusName("org.gnome.Hamster", bus=bus)
-        super().__init__(bus, "/org/gnome/Hamster")
+        self.bus_name = dbus.service.BusName("io.github.HamsterProjekt.Hamster", bus=bus)
+        super().__init__(bus, "/io/github/HamsterProjekt/Hamster")
         now = dt.datetime.now().replace(second=0, microsecond=0)
         day = now.replace(hour=0, minute=0)
         self.next_id = 1
@@ -48,19 +48,19 @@ class Hamster(dbus.service.Object):
         self.facts.append(fact)
         return fact["id"]
 
-    @dbus.service.signal("org.gnome.Hamster")
+    @dbus.service.signal("io.github.HamsterProjekt.Hamster")
     def FactsChanged(self):
         pass
 
-    @dbus.service.signal("org.gnome.Hamster")
+    @dbus.service.signal("io.github.HamsterProjekt.Hamster")
     def ActivitiesChanged(self):
         pass
 
-    @dbus.service.signal("org.gnome.Hamster")
+    @dbus.service.signal("io.github.HamsterProjekt.Hamster")
     def TagsChanged(self):
         pass
 
-    @dbus.service.method("org.gnome.Hamster", out_signature="as")
+    @dbus.service.method("io.github.HamsterProjekt.Hamster", out_signature="as")
     def GetTodaysFactsJSON(self):
         return [json.dumps(dict(
             id=f["id"], activity=f["activity"], category=f["category"],
@@ -69,7 +69,7 @@ class Hamster(dbus.service.Object):
                        end=f["end"].strftime(FMT) if f["end"] else None),
         )) for f in self.facts]
 
-    @dbus.service.method("org.gnome.Hamster", in_signature="s", out_signature="a(ss)")
+    @dbus.service.method("io.github.HamsterProjekt.Hamster", in_signature="s", out_signature="a(ss)")
     def GetActivities(self, search):
         seen = []
         for f in self.facts:
@@ -78,7 +78,7 @@ class Hamster(dbus.service.Object):
                 seen.append(pair)
         return seen
 
-    @dbus.service.method("org.gnome.Hamster", in_signature="siib", out_signature="i")
+    @dbus.service.method("io.github.HamsterProjekt.Hamster", in_signature="siib", out_signature="i")
     def AddFact(self, text, start_time, end_time, temporary):
         log("AddFact", repr(str(text)), int(start_time), int(end_time), bool(temporary))
         # Crude version of hamster's parser; times at the start are not handled.
@@ -96,7 +96,7 @@ class Hamster(dbus.service.Object):
         self.ActivitiesChanged()
         return new_id
 
-    @dbus.service.method("org.gnome.Hamster", in_signature="i")
+    @dbus.service.method("io.github.HamsterProjekt.Hamster", in_signature="i")
     def StopTracking(self, end_time):
         log("StopTracking", int(end_time))
         if self.facts and self.facts[-1]["end"] is None:
@@ -106,18 +106,18 @@ class Hamster(dbus.service.Object):
 
 class WindowServer(dbus.service.Object):
     def __init__(self, bus):
-        self.bus_name = dbus.service.BusName("org.gnome.Hamster.WindowServer", bus=bus)
-        super().__init__(bus, "/org/gnome/Hamster/WindowServer")
+        self.bus_name = dbus.service.BusName("io.github.HamsterProjekt.Hamster.WindowServer", bus=bus)
+        super().__init__(bus, "/io/github/HamsterProjekt/Hamster/WindowServer")
 
-    @dbus.service.method("org.gnome.Hamster.WindowServer")
+    @dbus.service.method("io.github.HamsterProjekt.Hamster.WindowServer")
     def edit(self, id=0):
         log("edit", int(id))
 
-    @dbus.service.method("org.gnome.Hamster.WindowServer")
+    @dbus.service.method("io.github.HamsterProjekt.Hamster.WindowServer")
     def overview(self):
         log("overview")
 
-    @dbus.service.method("org.gnome.Hamster.WindowServer")
+    @dbus.service.method("io.github.HamsterProjekt.Hamster.WindowServer")
     def preferences(self):
         log("preferences")
 
