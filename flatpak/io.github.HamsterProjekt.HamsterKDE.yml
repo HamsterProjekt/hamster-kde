@@ -3,6 +3,8 @@
 # widgets cannot be Flatpaks); see scripts/install-flatpak-widget.sh.
 #
 # Build and install for your user:   flatpak/build.sh
+# On every merge to main, .github/workflows/flatpak.yml builds it and
+# publishes the bundle as a release.
 #
 # The application id is not io.github.HamsterProjekt.Hamster: that is the
 # id of HamsterProjekt's Hamster with its GTK windows (HamsterProjekt/hamster).
@@ -57,8 +59,9 @@ modules:
         url: https://dbus.freedesktop.org/releases/dbus-python/dbus-python-1.4.0.tar.xz
         sha256: c36b28f10ffcc8f1f798aca973bcc132f91f33eb9b6b8904381b4077766043d5
 
-  # The service and the storage of Hamster, branch main of the checkout.
-  # Its GTK windows are not installed.
+  # The service and the storage of Hamster, from the main branch of
+  # HamsterProjekt/hamster. Its GTK windows are not installed.
+  # `flatpak/build.sh PATH` takes a local checkout instead.
   - name: hamster
     buildsystem: simple
     build-commands:
@@ -75,14 +78,9 @@ modules:
         ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
       - python3 -m compileall -q ${FLATPAK_DEST}/lib/hamster
     sources:
-      # Until the branch is published: the checkout next to this repository.
-      # Then a `type: git` source with `url`, `branch` and `commit`.
-      - type: dir
-        path: ../../hamster
-        skip:
-          - .git
-          - build
-          - .waf3-*
+      - type: git
+        url: https://github.com/HamsterProjekt/hamster.git
+        branch: main
 
   - name: hamster-kde
     buildsystem: simple
@@ -97,8 +95,11 @@ modules:
       - install -Dm644 flatpak/${FLATPAK_ID}.metainfo.xml -t ${FLATPAK_DEST}/share/metainfo
       - install -Dm644 COPYING -t ${FLATPAK_DEST}/share/licenses/${FLATPAK_ID}
     sources:
+      # this checkout (the manifest is in flatpak/)
       - type: dir
         path: ..
         skip:
           - .git
           - tests
+          - .flatpak-builder
+          - hamster-kde.flatpak

@@ -198,12 +198,20 @@ reject. Times are written as local time without a time zone.
 with the Markdown storage as one Flatpak, `io.github.HamsterProjekt.HamsterKDE`:
 
     flatpak/build.sh                      # builds, and installs for your user
+    flatpak/build.sh ../hamster           # the same, with a local Hamster checkout
     flatpak/build.sh --bundle             # also writes hamster-kde.flatpak
     flatpak run io.github.HamsterProjekt.HamsterKDE
 
-It needs `flatpak-builder` (`sudo apt install flatpak-builder`) and takes the
-Hamster checkout from `../hamster` (another path can be given). The first
-build downloads the KDE SDK and the PyQt base application, about 2 GB.
+It needs `flatpak-builder` (`sudo apt install flatpak-builder`). The Hamster
+service comes from the `main` branch of
+[HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster), unless a
+local checkout is given. The first build downloads the KDE SDK and the PyQt
+base application, about 2 GB.
+
+Every merge to `main` builds the Flatpak on GitHub
+(`.github/workflows/flatpak.yml`) and publishes it as a release; the latest is
+at <https://github.com/HamsterProjekt/hamster-kde/releases/latest/download/hamster-kde.flatpak>.
+A change to Hamster itself is picked up by the next build of this repository.
 
 The Plasma widget cannot be part of a Flatpak. To use it with the Flatpak:
 
@@ -224,11 +232,9 @@ Things to know:
   their folder in the tracking settings; the setting is the Flatpak's own too.
 - It may read and write your home directory (`--filesystem=home`), so that
   the files can be in any folder, and reports saved anywhere.
-- The manifest takes both source trees from this computer (`type: dir`), so
-  both repositories have to be cloned next to each other. For a build that
-  does not depend on that, name them as `type: git` sources
-  (`https://github.com/HamsterProjekt/hamster.git` and
-  `https://github.com/HamsterProjekt/hamster-kde.git`) with a `commit`.
+- The manifest takes this repository from the checkout (`type: dir`) and
+  Hamster from GitHub (`type: git`, branch `main`). For Flathub, both have to
+  be `type: git` sources with a `commit`.
 - The id `io.github.HamsterProjekt.HamsterKDE` follows Flathub's rule for
   projects hosted on GitHub. For Flathub, `flatpak/*.metainfo.xml` still
   needs a developer, a home page and screenshots.

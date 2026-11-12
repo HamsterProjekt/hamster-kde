@@ -210,27 +210,46 @@ the Markdown files; with SQLite it has no effect.
 ## As a Flatpak
 
 The windows and the Hamster service with the Markdown storage as one
-Flatpak, `io.github.HamsterProjekt.HamsterKDE`. It is built on your computer;
-it is not on Flathub.
+Flatpak, `io.github.HamsterProjekt.HamsterKDE`. It is not on Flathub: every
+merge to `main` builds it on GitHub and publishes it as a release, or you
+build it yourself.
 
-1. Install `flatpak` and `flatpak-builder`:
+1. Install `flatpak`:
 
    ```bash
-   sudo apt install flatpak flatpak-builder
+   sudo apt install flatpak
    ```
 
-2. Clone both repositories next to each other, as in
-   [step 2](#2-get-the-two-repositories-next-to-each-other) above.
+2. Clone this repository, for the widget and its installer:
 
-3. Build and install. The first build downloads the KDE SDK and the PyQt
-   base application, about 2 GB.
+   ```bash
+   git clone https://github.com/HamsterProjekt/hamster-kde.git ~/projects/hamster-kde
+   ```
+
+3. Get the Flatpak, in one of two ways.
+
+   **The latest release.** The runtime comes from Flathub with it:
+
+   ```bash
+   wget https://github.com/HamsterProjekt/hamster-kde/releases/latest/download/hamster-kde.flatpak
+   ```
+
+   ```bash
+   flatpak install --user hamster-kde.flatpak
+   ```
+
+   **Built on your computer.** This needs `flatpak-builder`
+   (`sudo apt install flatpak-builder`); the first build downloads the KDE
+   SDK and the PyQt base application, about 2 GB. The Hamster service comes
+   from the `main` branch of
+   [HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster):
 
    ```bash
    cd ~/projects/hamster-kde && flatpak/build.sh
    ```
 
-   `flatpak/build.sh /path/to/hamster` takes the Hamster checkout from
-   another place. `flatpak/build.sh --bundle` also writes
+   `flatpak/build.sh ~/projects/hamster` takes the Hamster service from a
+   local checkout instead. `flatpak/build.sh --bundle` also writes
    `hamster-kde.flatpak`, which installs on another computer with
    `flatpak install --user hamster-kde.flatpak`.
 
@@ -254,8 +273,8 @@ The Flatpak keeps its files in
 `~/.local/share/hamster/markdown`. To go on with existing files, choose
 their folder in the tracking settings.
 
-To update, pull both repositories and run `flatpak/build.sh` again. To
-uninstall:
+To update, install the latest release again, or pull and run
+`flatpak/build.sh` again. To uninstall:
 
 ```bash
 scripts/install-flatpak-widget.sh --uninstall
@@ -273,7 +292,7 @@ The widget works with the Hamster service of
 [HamsterProjekt/hamster](https://github.com/HamsterProjekt/hamster) however it
 is installed, also system-wide with its SQLite database and GTK windows (see
 "System-wide with waf" in its
-[INSTALL.md](https://github.com/HamsterProjekt/hamster/blob/master/INSTALL.md)).
+[INSTALL.md](https://github.com/HamsterProjekt/hamster/blob/main/INSTALL.md)).
 The stock `hamster-time-tracker` package does not work with it: that is
 upstream Hamster, with upstream's `org.gnome.Hamster` names.
 
