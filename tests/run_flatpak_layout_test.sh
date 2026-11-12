@@ -31,7 +31,14 @@ sh -e "$OUT/hamster-kde.sh" || { echo "FAIL  the hamster-kde module does not ins
 # the wrappers name /app
 sed -i "s|/app/|$OUT/app/|g" "$OUT/app/bin/hamster-kde" "$OUT/app/bin/hamster-service"
 
-export OUT ID
+# another installation that D-Bus can start, as the Hamster Flatpak with the
+# GTK windows is: a service with the SQLite database
+mkdir -p "$OUT/home/data/dbus-1/services"
+printf '[D-BUS Service]\nName=io.github.HamsterProjekt.Hamster\nExec=/usr/bin/env HAMSTER_STORAGE=sqlite %s %s\n' \
+    "$(command -v python3)" "$HAMSTER/src/hamster-service.py" \
+    > "$OUT/home/data/dbus-1/services/io.github.HamsterProjekt.Hamster.service"
+
+export OUT ID HAMSTER
 export XDG_DATA_HOME="$OUT/home/data" XDG_CONFIG_HOME="$OUT/home/config"
 export XDG_DATA_DIRS="$OUT/app/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 export GSETTINGS_BACKEND=keyfile NO_AT_BRIDGE=1
@@ -47,6 +54,19 @@ owner() {
     dbus-send --session --print-reply --dest=org.freedesktop.DBus / \
         org.freedesktop.DBus.NameHasOwner string:"$1" | grep -q "boolean true"
 }
+hamster() {  # hamster METHOD [ARGUMENTS...]
+    method="$1"; shift
+    dbus-send --session --print-reply --dest=io.github.HamsterProjekt.Hamster /io/github/HamsterProjekt/Hamster \
+        io.github.HamsterProjekt.Hamster."$method" "$@" 2>&1
+}
+wait_for() {  # wait_for markdown|sqlite: until the service that answers has that storage
+    n=0
+    while [ $n -lt 100 ]; do
+        hamster GetStorage | grep -q "\"$1\"" && return 0
+        sleep 0.1; n=$((n + 1))
+    done
+    return 1
+}
 app="$OUT/app"
 
 check "what the manifest installs is there" test -x "$app/bin/hamster-kde" -a -x "$app/bin/hamster-service" \
@@ -59,7 +79,7 @@ check "its program and icon are the installed ones" sh -c "grep -q \"^Exec=hamst
 check "the storage folder setting is in the schema" grep -q markdown-directory "$app/share/glib-2.0/schemas/io.github.HamsterProjekt.Hamster.gschema.xml"
 check "nothing of the tests or of git is installed" sh -c "! find \"$app\" -name tests -o -name .git | grep -q ."
 
-# nothing can start the service on this bus: the windows do it themselves
+# D-Bus could start the service of the other installation; the windows start their own
 check "no service yet" sh -c "! dbus-send --session --print-reply --dest=org.freedesktop.DBus / org.freedesktop.DBus.NameHasOwner string:io.github.HamsterProjekt.Hamster | grep -q \"boolean true\""
 PATH="$app/bin:$PATH" FLATPAK_ID="$ID" hamster-kde overview > "$OUT/windows.log" 2>&1 &
 windows=$!
@@ -73,12 +93,38 @@ dbus-send --session --print-reply --dest=io.github.HamsterProjekt.Hamster /io/gi
     io.github.HamsterProjekt.Hamster.AddFact string:"packaging@Work" int32:0 int32:0 boolean:false > /dev/null 2>&1
 check "the service is the Markdown one, writing to the data directory" \
     grep -q "packaging@Work" "$XDG_DATA_HOME/hamster/markdown/$(date +%Y-%m).md"
+check "not the one D-Bus would have started" sh -c "! test -e \"$XDG_DATA_HOME/hamster/hamster.db\""
+
+# stopped (as when the folder is changed): the windows start theirs again,
+# before a call has D-Bus start the other one
+hamster Quit > /dev/null
+n=0
+while [ $n -lt 50 ] && owner io.github.HamsterProjekt.Hamster; do sleep 0.1; n=$((n + 1)); done
+n=0
+while [ $n -lt 100 ] && ! owner io.github.HamsterProjekt.Hamster; do sleep 0.1; n=$((n + 1)); done
+check "after a stop, the windows bring back their service" wait_for markdown
 check "it says it is installed (no git needed for its version)" sh -c "cd / && PYTHONPATH=\"$app/lib/hamster\" python3 -c \"import hamster; assert hamster.installed, hamster.__version__\""
 sleep 2
 check "the windows are still running" kill -0 $windows
 check "no QML errors" sh -c "! grep -iE \"qml.*(error|is not a type|not installed|unavailable)|Traceback\" \"$OUT/windows.log\""
 # a second start hands over to the first and returns
 check "a second start hands over" sh -c "PATH=\"$app/bin:\$PATH\" timeout 10 hamster-kde prefs"
+kill $windows 2>/dev/null
+wait $windows 2>/dev/null
+
+# the other installation answers when the windows start: they say so,
+# and put theirs in its place when asked
+hamster Quit > /dev/null
+n=0
+while [ $n -lt 50 ] && owner io.github.HamsterProjekt.Hamster; do sleep 0.1; n=$((n + 1)); done
+check "the other service runs" wait_for sqlite
+PATH="$app/bin:$PATH" FLATPAK_ID="$ID" python3 tests/app_shot.py Overview "$OUT/other-service.png" \
+    "console.log(\"problem: \" + bus.storageProblem + \" own: \" + bus.canUseOwnService); bus.useOwnService()" \
+    "console.log(\"afterwards: [\" + bus.storageProblem + \"]\")" > "$OUT/other-service.log" 2>&1
+check "the windows warn about it" grep -q "problem: Another Hamster service is answering: it keeps the activities in the database" "$OUT/other-service.log"
+check "and offer their own service" grep -q "own: true" "$OUT/other-service.log"
+check "which then answers" wait_for markdown
+check "and the warning is gone" grep -qF "afterwards: []" "$OUT/other-service.log"
 
 for p in /proc/[0-9]*; do
     pid=${p#/proc/}

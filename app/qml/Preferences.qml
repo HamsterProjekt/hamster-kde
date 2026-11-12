@@ -145,6 +145,9 @@ QQC2.ApplicationWindow {
         anchors.margins: Kirigami.Units.largeSpacing
         spacing: Kirigami.Units.largeSpacing
 
+        ServiceWarning {
+            Layout.fillWidth: true
+        }
         Kirigami.InlineMessage {
             Layout.fillWidth: true
             type: Kirigami.MessageType.Error

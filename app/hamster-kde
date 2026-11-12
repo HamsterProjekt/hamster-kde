@@ -332,7 +332,9 @@ def expose(engine):
     Return them; they have to be kept for as long as the engine.
     """
     settings = Settings()
-    bus = HamsterBus()
+    # the service has HAMSTER_MARKDOWN_DIR from the same place as this program
+    bus = HamsterBus(expected_directory=lambda: os.environ.get("HAMSTER_MARKDOWN_DIR")
+                     or settings.storageDirectory)
     windows = Windows(engine)
     context = engine.rootContext()
     context.setContextProperty("settings", settings)
