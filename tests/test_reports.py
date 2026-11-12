@@ -109,12 +109,13 @@ class ReportsTest(unittest.TestCase):
         # the data of the script: valid, and it cannot end the script early
         facts = json.loads(re.search(r"var facts = (.*);", text).group(1))
         self.assertEqual([fact["delta"] for fact in facts], [10800, 5400, 2700, 1800])
-        self.assertEqual(text.count("</script>"), 3)
+        self.assertEqual(text.count("</script>"), 1)
         date_facts = json.loads(re.search(r"var dateFacts = (.*);", text).group(1))
         # a day start of 5:30: the night shift belongs to the 10th; the 12th is there, empty
         self.assertEqual([(day, len(day_facts)) for day, day_facts in date_facts],
                          [("Nov 10, 2026", 2), ("Nov 11, 2026", 2), ("Nov 12, 2026", 0)])
-        self.assertEqual(date_facts[1][1][0]["activity"], "Tea &amp; &lt;cake&gt;")
+        # the script puts the names into the page as text, so they are not escaped
+        self.assertEqual(date_facts[1][1][0]["activity"], "Tea & <cake>")
 
     def test_html_template_override(self):
         override = os.path.join(self.dir.name, "mine")

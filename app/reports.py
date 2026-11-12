@@ -278,21 +278,15 @@ def _html(facts, first, last, template_dirs):
         ))
 
     # every day of the report, also those without activities; the script
-    # of the report puts these into the page, hence escaped here
+    # of the report puts the names into the page as text, so no escaping
     by_date = {}
     for date, date_facts in itertools.groupby(facts, lambda fact: fact.date):
         by_date.setdefault(date, []).extend(date_facts)
     date_facts = []
     date = min([first] + list(by_date))
     while date <= max([last] + list(by_date)):
-        escaped = []
-        for fact in by_date.get(date, []):
-            entry = fact.as_dict()
-            for key in ("activity", "category", "description"):
-                entry[key] = html.escape(entry[key])
-            entry["tags"] = [html.escape(tag) for tag in entry["tags"]]
-            escaped.append(entry)
-        date_facts.append([date.strftime(HTML_DATE), escaped])
+        day_facts = [fact.as_dict() for fact in by_date.get(date, [])]
+        date_facts.append([date.strftime(HTML_DATE), day_facts])
         date += dt.timedelta(days=1)
 
     override = os.path.join(template_dirs[0], TEMPLATE_NAME) if template_dirs else ""
