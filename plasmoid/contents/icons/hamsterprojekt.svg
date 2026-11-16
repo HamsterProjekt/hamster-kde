@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
+  <title>HamsterProjekt</title>
+  <!-- The Hamster wheel, redrawn in the Breeze style. Palette: see STYLE.md. -->
+  <defs>
+    <linearGradient id="rim" x1="0" y1="3" x2="0" y2="37" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3daee9"/>
+      <stop offset="1" stop-color="#1d82c8"/>
+    </linearGradient>
+    <linearGradient id="face" x1="0" y1="8" x2="0" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fcfcfc"/>
+      <stop offset="1" stop-color="#dfe4e8"/>
+    </linearGradient>
+    <linearGradient id="stand" x1="0" y1="39" x2="0" y2="44" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4d555b"/>
+      <stop offset="1" stop-color="#31363b"/>
+    </linearGradient>
+  </defs>
+  <!-- ground shadow -->
+  <ellipse cx="24" cy="44.5" rx="19" ry="2" fill="#000" opacity=".12"/>
+  <!-- legs and base -->
+  <path d="M22.6 20 13 41h3.2L24 24.2 31.8 41H35L25.4 20z" fill="#31363b"/>
+  <rect x="5" y="39" width="38" height="5" rx="2" fill="url(#stand)"/>
+  <rect x="5" y="39" width="38" height="1" rx=".5" fill="#fff" opacity=".15"/>
+  <!-- wheel -->
+  <circle cx="24" cy="20" r="17" fill="url(#rim)"/>
+  <circle cx="24" cy="20" r="14.75" fill="none" stroke="#fff" stroke-width="1.6"
+          stroke-dasharray="3.2 4.52" stroke-linecap="round" opacity=".6" transform="rotate(-8 24 20)"/>
+  <circle cx="24" cy="20" r="12.5" fill="#1a6fa8" opacity=".35"/>
+  <circle cx="24" cy="20" r="12" fill="url(#face)"/>
+  <!-- spokes: a long bar and a short hand, so the wheel also reads as a clock -->
+  <g stroke-linecap="round">
+    <path d="M13.6 24.9 34.4 15.1" stroke="#1d99f3" stroke-width="3.2"/>
+    <path d="M24 20 29.3 27.6" stroke="#31363b" stroke-width="2.4"/>
+  </g>
+  <circle cx="24" cy="20" r="3.2" fill="#31363b"/>
+  <circle cx="24" cy="20" r="1.2" fill="#fcfcfc"/>
+</svg>

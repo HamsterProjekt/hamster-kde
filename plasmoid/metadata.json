@@ -3,7 +3,7 @@
     "KPlugin": {
         "Category": "Date and Time",
         "Description": "Track your time with HamsterProjekt",
-        "Icon": "chronometer",
+        "Icon": "io.github.HamsterProjekt.HamsterKDE",
         "Id": "io.github.HamsterProjekt.plasmoid",
         "License": "GPL-3.0-or-later",
         "Name": "Hamster Time Tracker",

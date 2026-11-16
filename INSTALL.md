@@ -317,6 +317,16 @@ Without a clone, the same widget is `hamster-kde.plasmoid` in the
 `kpackagetool6 --type Plasma/Applet --install hamster-kde.plasmoid`, or
 "Add Widgets… → Get New Widgets → Install Widget From Local File…".
 
+In the list of widgets it shows the HamsterProjekt icon, which
+`./install.sh` and the Flatpak install. Installed on its own, the widget
+has no way to bring it along; from a clone, this puts it in place:
+
+```bash
+install -Dm644 plasmoid/contents/icons/hamsterprojekt.svg ~/.local/share/icons/hicolor/scalable/apps/io.github.HamsterProjekt.HamsterKDE.svg
+```
+
+The icon in the panel is part of the widget and needs nothing.
+
 After changes, `--upgrade` in place of `--install`. To remove it:
 
 ```bash
