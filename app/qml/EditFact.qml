@@ -19,7 +19,10 @@ QQC2.ApplicationWindow {
 
     // the fact as it stands (see Lib.parseFact for the shape)
     property var fact: ({ start: null, end: null, activity: "", category: "", description: "", tags: [] })
+    // [{name, category}], the most recent first: for completion
     property var activities: []
+    // [{id, name}]
+    property var categories: []
     // facts of the day being edited, for the timeline
     property var dayFacts: []
     // why the fact cannot be saved; empty when it can
@@ -46,6 +49,7 @@ QQC2.ApplicationWindow {
 
     Component.onCompleted: {
         backend.getActivities(list => activities = list);
+        backend.getCategories(list => categories = list);
         if (factId) {
             backend.getFact(factId, loaded => {
                 fact = loaded;
@@ -377,17 +381,29 @@ QQC2.ApplicationWindow {
                 font.bold: true
             }
 
-            QQC2.TextField {
+            // an earlier activity comes with its category
+            CompletionField {
                 id: activityField
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
+                Accessible.name: qsTr("Activity")
+                candidates: window.activities.map(
+                    activity => ({ label: activity.name, detail: activity.category }))
                 onTextEdited: window.readFields()
+                onPicked: candidate => {
+                    categoryField.text = candidate.detail;
+                    window.readFields();
+                }
             }
-            QQC2.TextField {
+            CompletionField {
                 id: categoryField
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
+                Accessible.name: qsTr("Category")
+                candidates: Lib.categoryNames(window.activities, window.categories).map(
+                    name => ({ label: name, detail: "" }))
                 onTextEdited: window.readFields()
+                onPicked: window.readFields()
             }
         }
 

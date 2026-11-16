@@ -178,6 +178,11 @@ Plasma theme. They replace Hamster's GTK windows:
 started on demand once `scripts/install-backend.sh` has run. The installer
 also adds "Hamster Time Tracker" to the application menu.
 
+In the add/edit dialog the command line completes the activity as you type,
+and the Activity and Category fields list the earlier ones that match: Down
+opens the list, Up and Down choose, Enter or Tab takes the chosen one. An
+activity taken from the list brings its category along.
+
 Not ported from the GTK version yet: tag completion in the edit dialog.
 
 ### Exporting
@@ -291,6 +296,7 @@ dbus-python.
     tests/run_sync_test.sh ~/projects/hamster /tmp/hamster-sync   # a sync client delivers changed files
     tests/run_export_test.sh ~/projects/hamster /tmp/hamster-export # exports in every format
     python3 tests/test_reports.py                                  # the report writer alone
+    node tests/lib_test.js                                         # the completion helpers of lib.js
 
 To try the real widget in a window: `plasmawindowed io.github.HamsterProjekt.plasmoid`.
 
