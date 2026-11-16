@@ -74,8 +74,6 @@ modules:
       - install -Dm644 src/hamster-service.py ${FLATPAK_DEST}/lib/hamster/hamster-service.py
       - install -Dm644 data/io.github.HamsterProjekt.Hamster.gschema.xml -t ${FLATPAK_DEST}/share/glib-2.0/schemas
       - glib-compile-schemas ${FLATPAK_DEST}/share/glib-2.0/schemas
-      - install -Dm644 data/art/scalable/io.github.HamsterProjekt.Hamster.GUI.svg
-        ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
       - python3 -m compileall -q ${FLATPAK_DEST}/lib/hamster
     sources:
       - type: git
@@ -93,6 +91,9 @@ modules:
       - install -Dm755 flatpak/hamster-service.sh ${FLATPAK_DEST}/bin/hamster-service
       - install -Dm644 flatpak/${FLATPAK_ID}.desktop -t ${FLATPAK_DEST}/share/applications
       - install -Dm644 flatpak/${FLATPAK_ID}.metainfo.xml -t ${FLATPAK_DEST}/share/metainfo
+      # the HamsterProjekt icon; the widget asks for it under this name too
+      - install -Dm644 plasmoid/contents/icons/hamsterprojekt.svg
+        ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
       - install -Dm644 COPYING -t ${FLATPAK_DEST}/share/licenses/${FLATPAK_ID}
     sources:
       # this checkout (the manifest is in flatpak/)

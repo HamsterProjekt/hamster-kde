@@ -326,6 +326,17 @@ class WindowServer(QDBusAbstractAdaptor):
         self._windows.edit(fact_id)
 
 
+ICON_NAME = "io.github.HamsterProjekt.HamsterKDE"
+
+
+def application_icon():
+    """The HamsterProjekt icon: the installed one, or the checkout's."""
+    here = os.path.dirname(os.path.realpath(__file__))
+    in_checkout = os.path.join(here, "..", "plasmoid", "contents", "icons", "hamsterprojekt.svg")
+    fallback = QIcon(in_checkout) if os.path.exists(in_checkout) else QIcon.fromTheme("chronometer")
+    return QIcon.fromTheme(ICON_NAME, fallback)
+
+
 def expose(engine):
     """Make `settings`, `bus` and `app` available to the QML of the engine.
 
@@ -378,10 +389,10 @@ def main():
 
     app = QApplication(sys.argv[:1])
     app.setApplicationName("hamster-kde")
-    app.setApplicationDisplayName("Hamster")
-    # as a Flatpak, the desktop file and the icon are named after the application id
+    app.setApplicationDisplayName("HamsterProjekt")
+    # as a Flatpak, the desktop file is named after the application id
     app.setDesktopFileName(flatpak_id or "io.github.HamsterProjekt.hamster-kde")
-    app.setWindowIcon(QIcon.fromTheme(flatpak_id or "chronometer", QIcon.fromTheme("chronometer")))
+    app.setWindowIcon(application_icon())
     app.setQuitOnLastWindowClosed(False)
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 

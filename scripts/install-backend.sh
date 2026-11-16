@@ -20,7 +20,7 @@
 #   - adds D-Bus service files to ~/.local/share/dbus-1/services, so that
 #     io.github.HamsterProjekt.Hamster is started on demand with the chosen storage, and the
 #     windows (overview, edit, settings) are the Qt ones of app/
-#   - adds a "Hamster Time Tracker" entry to the application menu
+#   - adds a "HamsterProjekt Time Tracker" entry to the application menu
 #   - removes what installations from before the rename to
 #     io.github.HamsterProjekt left (org.gnome.Hamster service files and
 #     schema, the org.projecthamster desktop file), and copies the settings
@@ -33,6 +33,10 @@ schemas="$data_home/glib-2.0/schemas"
 services="$data_home/dbus-1/services"
 applications="$data_home/applications"
 desktop_file="$applications/io.github.HamsterProjekt.hamster-kde.desktop"
+# the HamsterProjekt icon, for the desktop file and for the widget; the
+# Flatpak brings the same one under the same name
+icon_name=io.github.HamsterProjekt.HamsterKDE
+icons="$data_home/icons/hicolor/scalable/apps"
 # (the .GUI one was installed by earlier versions of this script)
 names="io.github.HamsterProjekt.Hamster io.github.HamsterProjekt.Hamster.WindowServer io.github.HamsterProjekt.Hamster.GUI"
 # the names installations used before the fork had its own
@@ -76,7 +80,7 @@ if [ "$1" = "--uninstall" ]; then
     for name in $names; do
         rm -f "$services/$name.service"
     done
-    rm -f "$desktop_file"
+    rm -f "$desktop_file" "$icons/$icon_name.svg"
     rm -f "$schemas/io.github.HamsterProjekt.Hamster.gschema.xml"
     remove_legacy
     if [ -d "$schemas" ]; then
@@ -109,7 +113,8 @@ if [ ! -f "$hamster/src/hamster/storage/markdown.py" ]; then
     exit 1
 fi
 
-mkdir -p "$schemas" "$services" "$applications"
+mkdir -p "$schemas" "$services" "$applications" "$icons"
+cp "$here/plasmoid/contents/icons/hamsterprojekt.svg" "$icons/$icon_name.svg"
 remove_legacy
 cp "$hamster/data/io.github.HamsterProjekt.Hamster.gschema.xml" "$schemas/"
 glib-compile-schemas "$schemas"
@@ -142,10 +147,10 @@ rm -f "$services/io.github.HamsterProjekt.Hamster.GUI.service"
 cat > "$desktop_file" <<DESKTOP
 [Desktop Entry]
 Type=Application
-Name=Hamster Time Tracker
+Name=HamsterProjekt Time Tracker
 Comment=Overview of your tracked time
 Exec=$python3 $here/app/hamster-kde overview
-Icon=chronometer
+Icon=$icon_name
 Categories=Office;Utility;Qt;KDE;
 StartupWMClass=hamster-kde
 DESKTOP

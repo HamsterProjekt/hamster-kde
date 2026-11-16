@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=Hamster Time Tracker
+Name=HamsterProjekt Time Tracker
 GenericName=Time Tracker
 Comment=Overview of your tracked time
 Exec=hamster-kde overview

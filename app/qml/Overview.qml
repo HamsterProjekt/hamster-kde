@@ -35,7 +35,7 @@ QQC2.ApplicationWindow {
                                     "#a9cf83", "#d9a6cf", "#9db4e0"]
     readonly property real dayColumnWidth: Kirigami.Units.gridUnit * 6.5
 
-    title: qsTr("Hamster Time Tracker")
+    title: qsTr("HamsterProjekt Time Tracker")
     width: Kirigami.Units.gridUnit * 44
     height: Kirigami.Units.gridUnit * 34
     minimumWidth: Kirigami.Units.gridUnit * 30

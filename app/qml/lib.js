@@ -330,3 +330,37 @@ function complete(text, activities, defaultDay, now, dayStart) {
     }
     return "";
 }
+
+// The candidates to list for what is typed in a field: those whose label
+// starts with it, then those that contain it, each in the order given.
+// candidates: [{label, detail}]. Nothing typed lists them all.
+function suggest(typed, candidates, limit) {
+    const wanted = typed.trim().toLowerCase();
+    const starting = [];
+    const containing = [];
+    for (const candidate of candidates) {
+        const at = candidate.label.toLowerCase().indexOf(wanted);
+        if (at === 0)
+            starting.push(candidate);
+        else if (at > 0)
+            containing.push(candidate);
+    }
+    const found = starting.concat(containing).slice(0, limit);
+    // nothing to choose when the only one is what is typed already
+    if (found.length === 1 && found[0].label === typed.trim() && !found[0].detail)
+        return [];
+    return found;
+}
+
+// Names of the categories to suggest: those of the activities first (they
+// come most recent first), then the others. Without the empty category.
+function categoryNames(activities, categories) {
+    const names = [];
+    const add = name => {
+        if (name && names.indexOf(name) < 0)
+            names.push(name);
+    };
+    activities.forEach(activity => add(activity.category));
+    categories.forEach(category => add(category.name));
+    return names;
+}

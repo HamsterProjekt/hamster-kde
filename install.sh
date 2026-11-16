@@ -33,4 +33,4 @@ remove_legacy_widget
 kpackagetool6 --type Plasma/Applet --upgrade plasmoid 2>/dev/null \
     || kpackagetool6 --type Plasma/Applet --install plasmoid
 echo
-echo "Now right-click a panel, choose 'Add or Manage Widgets', and add 'Hamster Time Tracker'."
+echo "Now right-click a panel, choose 'Add or Manage Widgets', and add 'HamsterProjekt Time Tracker'."
