@@ -183,6 +183,11 @@ and the Activity and Category fields list the earlier ones that match: Down
 opens the list, Up and Down choose, Enter or Tab takes the chosen one. An
 activity taken from the list brings its category along.
 
+In the add/edit dialog the command line completes the activity as you type,
+and the Activity and Category fields list the earlier ones that match: Down
+opens the list, Up and Down choose, Enter or Tab takes the chosen one. An
+activity taken from the list brings its category along.
+
 Not ported from the GTK version yet: tag completion in the edit dialog.
 
 ### Exporting
