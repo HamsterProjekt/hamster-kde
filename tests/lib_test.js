@@ -2,14 +2,22 @@
 // Checks the completion helpers of app/qml/lib.js:  node tests/lib_test.js
 const assert = require("assert");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
-const vm = require("vm");
 
-// lib.js is a QML library; without its pragma it is plain JavaScript
+// lib.js is a QML library: without its pragma, and with its functions
+// exported, a copy of it is a module that node can load
 const source = fs.readFileSync(path.join(__dirname, "..", "app", "qml", "lib.js"), "utf8")
     .replace(/^\.pragma library$/m, "");
-const Lib = {};
-vm.runInNewContext(source + "\nout.suggest = suggest; out.categoryNames = categoryNames;", { out: Lib });
+const folder = fs.mkdtempSync(path.join(os.tmpdir(), "hamster-kde-lib-"));
+const copy = path.join(folder, "lib.js");
+fs.writeFileSync(copy, source + "\nmodule.exports = { suggest, categoryNames };\n");
+let Lib;
+try {
+    Lib = require(copy);
+} finally {
+    fs.rmSync(folder, { recursive: true });
+}
 
 const activities = [
     { label: "Lunch", detail: "Day-to-day" },
@@ -17,8 +25,7 @@ const activities = [
     { label: "Watering flowers", detail: "Day-to-day" },
     { label: "Slow lunch", detail: "" },
 ];
-// Array.from: the arrays of the other context are not this one's
-const labels = found => Array.from(found, candidate => candidate.label);
+const labels = found => found.map(candidate => candidate.label);
 
 // nothing typed: everything, in the order given
 assert.deepStrictEqual(labels(Lib.suggest("", activities, 50)),
@@ -38,9 +45,9 @@ assert.deepStrictEqual(labels(Lib.suggest("Work", [{ label: "Work", detail: "" }
 assert.deepStrictEqual(labels(Lib.suggest("work", [{ label: "Work", detail: "" }], 50)), ["Work"]);
 
 assert.deepStrictEqual(
-    Array.from(Lib.categoryNames(
+    Lib.categoryNames(
         [{ name: "a", category: "Work" }, { name: "b", category: "" }, { name: "c", category: "Work" }],
-        [{ id: 1, name: "Day-to-day" }, { id: 2, name: "Work" }])),
+        [{ id: 1, name: "Day-to-day" }, { id: 2, name: "Work" }]),
     ["Work", "Day-to-day"]);
 
 console.log("lib_test: ok");
