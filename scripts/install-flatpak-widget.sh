@@ -96,7 +96,7 @@ reload_bus
 kpackagetool6 --type Plasma/Applet --upgrade "$widget" 2>/dev/null \
     || kpackagetool6 --type Plasma/Applet --install "$widget"
 echo
-echo "Done. Add 'Hamster Time Tracker' to a panel, if it is not there yet."
+echo "Done. Add 'HamsterProjekt Time Tracker' to a panel, if it is not there yet."
 echo "The Flatpak keeps its files in ~/.var/app/$id/data/hamster/markdown,"
 echo "unless another folder is chosen in the tracking settings."
 if [ -d "$HOME/.var/app/$legacy_id/data/hamster" ]; then

@@ -389,7 +389,7 @@ def main():
 
     app = QApplication(sys.argv[:1])
     app.setApplicationName("hamster-kde")
-    app.setApplicationDisplayName("Hamster")
+    app.setApplicationDisplayName("HamsterProjekt")
     # as a Flatpak, the desktop file is named after the application id
     app.setDesktopFileName(flatpak_id or "io.github.HamsterProjekt.hamster-kde")
     app.setWindowIcon(application_icon())

@@ -25,7 +25,7 @@ PlasmoidItem {
 
     Plasmoid.status: hamster.ongoing ? PlasmaCore.Types.ActiveStatus : PlasmaCore.Types.PassiveStatus
 
-    toolTipMainText: i18n("Hamster Time Tracker")
+    toolTipMainText: i18n("HamsterProjekt Time Tracker")
     toolTipSubText: hamster.available
         ? panelText
         : i18n("The Hamster service is not running")

@@ -159,7 +159,7 @@ The sections below describe the two parts separately.
     kpackagetool6 --type Plasma/Applet --install plasmoid     # first time
     kpackagetool6 --type Plasma/Applet --upgrade plasmoid     # after changes
 
-Then add "Hamster Time Tracker" to a panel. Plasma lets you set a keyboard
+Then add "HamsterProjekt Time Tracker" to a panel. Plasma lets you set a keyboard
 shortcut that opens the popup in the widget's settings.
 
 ## The windows
@@ -176,7 +176,7 @@ Plasma theme. They replace Hamster's GTK windows:
 `hamster-kde` is a small PyQt6 launcher. It also provides
 `io.github.HamsterProjekt.Hamster.WindowServer`, which is what the widget calls, and is
 started on demand once `scripts/install-backend.sh` has run. The installer
-also adds "Hamster Time Tracker" to the application menu.
+also adds "HamsterProjekt Time Tracker" to the application menu.
 
 In the add/edit dialog the command line completes the activity as you type,
 and the Activity and Category fields list the earlier ones that match: Down

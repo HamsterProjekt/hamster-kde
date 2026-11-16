@@ -20,7 +20,7 @@
 #   - adds D-Bus service files to ~/.local/share/dbus-1/services, so that
 #     io.github.HamsterProjekt.Hamster is started on demand with the chosen storage, and the
 #     windows (overview, edit, settings) are the Qt ones of app/
-#   - adds a "Hamster Time Tracker" entry to the application menu
+#   - adds a "HamsterProjekt Time Tracker" entry to the application menu
 #   - removes what installations from before the rename to
 #     io.github.HamsterProjekt left (org.gnome.Hamster service files and
 #     schema, the org.projecthamster desktop file), and copies the settings
@@ -147,7 +147,7 @@ rm -f "$services/io.github.HamsterProjekt.Hamster.GUI.service"
 cat > "$desktop_file" <<DESKTOP
 [Desktop Entry]
 Type=Application
-Name=Hamster Time Tracker
+Name=HamsterProjekt Time Tracker
 Comment=Overview of your tracked time
 Exec=$python3 $here/app/hamster-kde overview
 Icon=$icon_name

@@ -99,7 +99,7 @@ It writes these, and nothing else:
 | `~/.local/share/dbus-1/services/io.github.HamsterProjekt.Hamster.service` | starts the Hamster service on demand, with the chosen storage |
 | `~/.local/share/dbus-1/services/io.github.HamsterProjekt.Hamster.WindowServer.service` | starts the windows on demand |
 | `~/.local/share/glib-2.0/schemas/io.github.HamsterProjekt.Hamster.gschema.xml` | Hamster's settings schema |
-| `~/.local/share/applications/io.github.HamsterProjekt.hamster-kde.desktop` | "Hamster Time Tracker" in the application menu |
+| `~/.local/share/applications/io.github.HamsterProjekt.hamster-kde.desktop` | "HamsterProjekt Time Tracker" in the application menu |
 | `~/.local/share/plasma/plasmoids/io.github.HamsterProjekt.plasmoid` | the widget |
 
 The service files point at the two checkouts, so keep them. After moving
@@ -108,7 +108,7 @@ one, run `./install.sh` again.
 ### 5. Add the widget to a panel
 
 Right-click a panel, choose "Add or Manage Widgets", and add
-"Hamster Time Tracker".
+"HamsterProjekt Time Tracker".
 
 ### 6. Check that it works
 
@@ -125,7 +125,7 @@ the file of this month:
 cat ~/.local/share/hamster/markdown/$(date +%Y-%m).md
 ```
 
-The overview is in the application menu as "Hamster Time Tracker", or:
+The overview is in the application menu as "HamsterProjekt Time Tracker", or:
 
 ```bash
 ~/projects/hamster-kde/app/hamster-kde
@@ -270,7 +270,7 @@ build it yourself.
    ```
 
    or, in a clone, `scripts/install-flatpak-widget.sh`, which takes the
-   widget from `plasmoid/`. Then add "Hamster Time Tracker" to a panel. This
+   widget from `plasmoid/`. Then add "HamsterProjekt Time Tracker" to a panel. This
    takes the place of `./install.sh`; use one or the other.
 
 The Flatpak keeps its files in
@@ -363,7 +363,7 @@ Until November 2026 Hamster for KDE used upstream's D-Bus names
 as in [Updating](#updating). The installer removes the old service files,
 schema, menu entry and widget, and copies your settings (among them the
 folder of the Markdown files) to the new schema. Stop the old service and
-windows, as in Updating, and add "Hamster Time Tracker" to the panel again:
+windows, as in Updating, and add "HamsterProjekt Time Tracker" to the panel again:
 the old widget is gone from it.
 
 **As a Flatpak:** build and install the new one and run
