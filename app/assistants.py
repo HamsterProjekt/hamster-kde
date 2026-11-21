@@ -98,10 +98,38 @@ def _command_next_to_service(service_file):
     return None
 
 
+def session_environment(environ=None, uid=None):
+    """The variables hamster-mcp needs to reach the D-Bus session bus.
+
+    Some assistants (Claude Desktop as packaged for Linux, for one) run
+    without DBUS_SESSION_BUS_ADDRESS and XDG_RUNTIME_DIR, so neither
+    `flatpak run` nor dbus-python can find the session bus, and the server
+    exits at once. Writing them into the server's entry fixes that.
+
+    Only the standard per-user bus (/run/user/UID/bus) is written: other
+    addresses change at every login and would go stale in the file.
+    """
+    environ = os.environ if environ is None else environ
+    uid = os.getuid() if uid is None else uid
+    runtime_dir = "/run/user/{}".format(uid)
+    address = "unix:path={}/bus".format(runtime_dir)
+    if environ.get("FLATPAK_ID"):
+        # inside the sandbox, the variables are the sandbox's own; the
+        # assistants run outside, on the host's standard bus
+        return {"XDG_RUNTIME_DIR": runtime_dir, "DBUS_SESSION_BUS_ADDRESS": address}
+    runtime_dir = environ.get("XDG_RUNTIME_DIR") or runtime_dir
+    address = "unix:path={}/bus".format(runtime_dir)
+    env = {"XDG_RUNTIME_DIR": runtime_dir}
+    if environ.get("DBUS_SESSION_BUS_ADDRESS", address) == address:
+        env["DBUS_SESSION_BUS_ADDRESS"] = address
+    return env
+
+
 class Assistant(object):
     """An assistant that keeps its MCP servers under "mcpServers" in a JSON file."""
 
-    def __init__(self, id, name, config_path, present_paths, extra=None):
+    def __init__(self, id, name, config_path, present_paths, extra=None, environ=None):
+        self.environ = os.environ if environ is None else environ
         self.id = id
         self.name = name
         self.config_path = config_path
@@ -136,7 +164,7 @@ class Assistant(object):
         except AssistantError:
             return UNREADABLE
         if entry is not None:
-            if command and _same_command(entry, command):
+            if command and _same_entry(entry, server_entry(command, self.environ)):
                 return CONNECTED
             return OUTDATED
         return DISCONNECTED if self.installed() else MISSING
@@ -147,7 +175,7 @@ class Assistant(object):
         data = self._read()
         servers = data.setdefault("mcpServers", {})
         entry = dict(self.extra)
-        entry.update(server_entry(command))
+        entry.update(server_entry(command, self.environ))
         servers[SERVER_NAME] = entry
         self._write(data)
 
@@ -183,18 +211,25 @@ class Assistant(object):
             raise AssistantError("Could not write {}: {}".format(path, error.strerror or error))
 
 
-def server_entry(command):
-    return {"command": command[0], "args": list(command[1:])}
+def server_entry(command, environ=None):
+    return {"command": command[0], "args": list(command[1:]),
+            "env": session_environment(environ)}
 
 
-def _same_command(entry, command):
-    return (isinstance(entry, dict) and entry.get("command") == command[0]
-            and list(entry.get("args") or []) == list(command[1:]))
+def _same_entry(entry, expected):
+    """Whether the entry starts the server as expected (more variables are fine)."""
+    if not isinstance(entry, dict):
+        return False
+    env = entry.get("env") or {}
+    return (entry.get("command") == expected["command"]
+            and list(entry.get("args") or []) == expected["args"]
+            and isinstance(env, dict)
+            and all(env.get(key) == value for key, value in expected["env"].items()))
 
 
-def configuration_snippet(command):
+def configuration_snippet(command, environ=None):
     """The JSON to paste into the configuration of another assistant."""
-    return json.dumps({"mcpServers": {SERVER_NAME: server_entry(command)}}, indent=2)
+    return json.dumps({"mcpServers": {SERVER_NAME: server_entry(command, environ)}}, indent=2)
 
 
 def known_assistants(environ=None):
@@ -207,9 +242,9 @@ def known_assistants(environ=None):
     return [
         Assistant("claude-desktop", "Claude Desktop",
                   os.path.join(claude_desktop, "claude_desktop_config.json"),
-                  [claude_desktop]),
+                  [claude_desktop], environ=environ),
         Assistant("claude-code", "Claude Code",
                   os.path.join(claude_code_dir, ".claude.json"),
                   [os.path.join(claude_code_dir, ".claude.json"), os.path.join(home, ".claude")],
-                  extra={"type": "stdio"}),
+                  extra={"type": "stdio"}, environ=environ),
     ]

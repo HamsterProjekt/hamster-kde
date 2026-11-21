@@ -85,6 +85,11 @@ class ServerCommandTest(HomeTestCase):
 class AssistantTest(HomeTestCase):
     COMMAND = ["flatpak", "run", "--command=hamster-mcp", "io.github.HamsterProjekt.HamsterKDE"]
 
+    def bus_env(self):
+        runtime_dir = "/run/user/{}".format(os.getuid())
+        return {"XDG_RUNTIME_DIR": runtime_dir,
+                "DBUS_SESSION_BUS_ADDRESS": "unix:path={}/bus".format(runtime_dir)}
+
     def assistant(self, id):
         return next(a for a in assistants.known_assistants(self.environ) if a.id == id)
 
@@ -99,7 +104,8 @@ class AssistantTest(HomeTestCase):
         self.assertEqual(desktop.status(self.COMMAND), CONNECTED)
         self.assertEqual(self.read_json(".config", "Claude", "claude_desktop_config.json"),
                          {"mcpServers": {"hamster": {"command": "flatpak",
-                                                     "args": self.COMMAND[1:]}}})
+                                                     "args": self.COMMAND[1:],
+                                                     "env": self.bus_env()}}})
         mode = stat.S_IMODE(os.stat(desktop.config_path).st_mode)
         self.assertEqual(mode, 0o600)
         self.assertEqual(desktop.status(["/usr/bin/hamster-mcp"]), OUTDATED)
@@ -121,7 +127,8 @@ class AssistantTest(HomeTestCase):
 
         data = self.read_json(".claude.json")
         self.assertEqual(data["mcpServers"]["hamster"],
-                         {"type": "stdio", "command": "flatpak", "args": self.COMMAND[1:]})
+                         {"type": "stdio", "command": "flatpak", "args": self.COMMAND[1:],
+                          "env": self.bus_env()})
         del data["mcpServers"]["hamster"]
         self.assertEqual(data, original)
         self.assertEqual(stat.S_IMODE(os.stat(self.path(".claude.json")).st_mode), 0o644)
@@ -156,9 +163,49 @@ class AssistantTest(HomeTestCase):
         self.assertEqual(self.assistant("claude-desktop").config_path,
                          self.path("elsewhere", "Claude", "claude_desktop_config.json"))
 
+    def test_entry_without_the_bus_is_outdated(self):
+        # as written before the variables were added: the server cannot
+        # reach the bus from Claude Desktop, so it offers an update
+        self.write(json.dumps({"mcpServers": {"hamster": {"command": "flatpak",
+                                                          "args": self.COMMAND[1:]}}}),
+                   ".config", "Claude", "claude_desktop_config.json")
+        desktop = self.assistant("claude-desktop")
+        self.assertEqual(desktop.status(self.COMMAND), OUTDATED)
+        desktop.connect(self.COMMAND)
+        self.assertEqual(desktop.status(self.COMMAND), CONNECTED)
+
     def test_snippet(self):
-        self.assertEqual(json.loads(assistants.configuration_snippet(["/usr/bin/hamster-mcp"])),
-                         {"mcpServers": {"hamster": {"command": "/usr/bin/hamster-mcp", "args": []}}})
+        environ = {"XDG_RUNTIME_DIR": "/run/user/7"}
+        self.assertEqual(json.loads(assistants.configuration_snippet(["/usr/bin/hamster-mcp"], environ)),
+                         {"mcpServers": {"hamster": {"command": "/usr/bin/hamster-mcp", "args": [],
+                                                     "env": {"XDG_RUNTIME_DIR": "/run/user/7",
+                                                             "DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/7/bus"}}}})
+
+
+class SessionEnvironmentTest(unittest.TestCase):
+    def test_flatpak_uses_the_host_standard_bus(self):
+        # the sandbox's own variables must not leak into the host's configuration
+        environ = {"FLATPAK_ID": "x", "XDG_RUNTIME_DIR": "/run/user/1000",
+                   "DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/flatpak/bus"}
+        self.assertEqual(assistants.session_environment(environ, uid=1000),
+                         {"XDG_RUNTIME_DIR": "/run/user/1000",
+                          "DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/1000/bus"})
+
+    def test_host_standard_bus(self):
+        environ = {"XDG_RUNTIME_DIR": "/run/user/1000",
+                   "DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/1000/bus"}
+        self.assertEqual(assistants.session_environment(environ, uid=1000), environ)
+
+    def test_host_without_variables(self):
+        self.assertEqual(assistants.session_environment({}, uid=1000),
+                         {"XDG_RUNTIME_DIR": "/run/user/1000",
+                          "DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/1000/bus"})
+
+    def test_host_bus_that_changes_at_every_login_is_not_written(self):
+        environ = {"XDG_RUNTIME_DIR": "/run/user/1000",
+                   "DBUS_SESSION_BUS_ADDRESS": "unix:abstract=/tmp/dbus-XyZ,guid=1234"}
+        self.assertEqual(assistants.session_environment(environ, uid=1000),
+                         {"XDG_RUNTIME_DIR": "/run/user/1000"})
 
 
 if __name__ == "__main__":
