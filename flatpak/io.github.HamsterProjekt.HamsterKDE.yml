@@ -1,6 +1,7 @@
 # Flatpak of Hamster for KDE: the windows of app/ and the Hamster service
-# with the Markdown storage. The Plasma widget is not part of it (Plasma
-# widgets cannot be Flatpaks); see scripts/install-flatpak-widget.sh.
+# with the Markdown storage. The Plasma widget cannot be a Flatpak: the app
+# carries a copy, which the tracking settings install for the user (as
+# scripts/install-flatpak-widget.sh does from a terminal).
 #
 # Build and install for your user:   flatpak/build.sh
 # On every merge to main, .github/workflows/flatpak.yml builds it and
@@ -86,8 +87,11 @@ modules:
     build-commands:
       - install -d ${FLATPAK_DEST}/lib/hamster-kde
       - cp -r app/qml ${FLATPAK_DEST}/lib/hamster-kde/
-      - install -m644 app/hamster-kde app/assistants.py app/hamsterbus.py app/reports.py app/report_template.html
-        -t ${FLATPAK_DEST}/lib/hamster-kde
+      - install -m644 app/hamster-kde app/assistants.py app/hamsterbus.py app/reports.py app/widget.py
+        app/report_template.html -t ${FLATPAK_DEST}/lib/hamster-kde
+      # the Plasma widget, which the tracking settings install for the user
+      # (Plasma does not load widgets from a Flatpak)
+      - cp -r plasmoid ${FLATPAK_DEST}/lib/hamster-kde/plasmoid
       - install -Dm755 flatpak/hamster-kde.sh ${FLATPAK_DEST}/bin/hamster-kde
       - install -Dm755 flatpak/hamster-service.sh ${FLATPAK_DEST}/bin/hamster-service
       - install -Dm755 flatpak/hamster-mcp.sh ${FLATPAK_DEST}/bin/hamster-mcp

@@ -37,6 +37,7 @@ from PyQt6.QtWidgets import QApplication
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import assistants as mcp_assistants  # noqa: E402
 import reports  # noqa: E402
+import widget as panel_widget  # noqa: E402
 from hamsterbus import HamsterBus  # noqa: E402
 
 SERVICE = "io.github.HamsterProjekt.Hamster.WindowServer"
@@ -63,6 +64,7 @@ class Settings(QObject):
     dayStartMinutesChanged = pyqtSignal()
     storageDirectoryChanged = pyqtSignal()
     assistantsChanged = pyqtSignal()
+    widgetChanged = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -210,6 +212,67 @@ class Settings(QObject):
             return False
         QApplication.clipboard().setText(mcp_assistants.configuration_snippet(command))
         return True
+
+    # --- the Plasma widget (see widget.py) ---
+
+    @pyqtProperty("QVariantMap", notify=widgetChanged)
+    def widget(self):
+        """{status, path, version, installedVersion}, status as in widget.py."""
+        w = panel_widget.Widget()
+        return {"status": w.status(), "path": w.path,
+                "version": w.version_of(w.source) if w.source else "",
+                "installedVersion": w.version_of(w.path)}
+
+    @pyqtSlot()
+    def refreshWidget(self):
+        self.widgetChanged.emit()
+
+    @pyqtSlot(result="QVariantMap")
+    def installWidget(self):
+        """Install the widget, or update it. Returns {"ok": bool, "message": str}."""
+        w = panel_widget.Widget()
+        first = w.status() == panel_widget.MISSING
+        try:
+            services_changed = w.install()
+        except panel_widget.WidgetError as error:
+            return {"ok": False, "message": str(error)}
+        finally:
+            self.widgetChanged.emit()
+        if services_changed:
+            self._services_changed(stop=True)
+        if first:
+            message = ("Installed. To add it to a panel, right-click the panel, choose "
+                       "\u201cAdd Widgets\u2026\u201d and look for \u201cHamsterProjekt Time Tracker\u201d.")
+        else:
+            message = "Updated. Plasma uses the new version after you log out and in again."
+        return {"ok": True, "message": message}
+
+    @pyqtSlot(result="QVariantMap")
+    def removeWidget(self):
+        w = panel_widget.Widget()
+        try:
+            w.remove()
+        except panel_widget.WidgetError as error:
+            return {"ok": False, "message": str(error)}
+        finally:
+            self.widgetChanged.emit()
+        self._services_changed(stop=False)
+        return {"ok": True, "message": "Removed. If it was on a panel, remove it there too."}
+
+    @staticmethod
+    def _services_changed(stop):
+        """Have D-Bus read the service files again (it usually notices on its own)."""
+        bus = QDBusConnection.sessionBus()
+        bus.call(QDBusMessage.createMethodCall("org.freedesktop.DBus", "/org/freedesktop/DBus",
+                                               "org.freedesktop.DBus", "ReloadConfig"))
+        if stop:
+            # a Hamster that D-Bus started from the old files would go on
+            # answering; the next request starts the one the files name
+            quit_call = QDBusMessage.createMethodCall(
+                "io.github.HamsterProjekt.Hamster", "/io/github/HamsterProjekt/Hamster",
+                "io.github.HamsterProjekt.Hamster", "Quit")
+            quit_call.setAutoStartService(False)
+            bus.call(quit_call)
 
     @pyqtProperty(bool, constant=True)
     def writable(self):

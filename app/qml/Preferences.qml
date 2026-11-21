@@ -24,6 +24,27 @@ QQC2.ApplicationWindow {
     property string storageNote: ""
     // what to do after connecting an AI assistant
     property string assistantNote: ""
+    // what to do after installing the Plasma widget
+    property string widgetNote: ""
+
+    function widgetResult(result) {
+        if (result.ok) {
+            widgetNote = result.message;
+            problem = "";
+        } else {
+            problem = result.message;
+        }
+    }
+
+    function widgetStatus(widget) {
+        switch (widget.status) {
+        case "current": return qsTr("Installed");
+        case "outdated": return qsTr("Installed; an update is ready");
+        case "newer": return qsTr("Installed, version %1").arg(widget.installedVersion);
+        case "system": return qsTr("Installed for all users");
+        default: return qsTr("Not installed");
+        }
+    }
 
     function setAssistantConnected(assistant, connected) {
         const result = settings.setAssistantConnected(assistant.id, connected);
@@ -87,10 +108,12 @@ QQC2.ApplicationWindow {
         onFailed: message => window.problem = message
     }
 
-    // an assistant may have been installed in the meantime
+    // an assistant (or the widget) may have been installed in the meantime
     onActiveChanged: {
-        if (active)
+        if (active) {
             settings.refreshAssistants();
+            settings.refreshWidget();
+        }
     }
 
     Component.onCompleted: {
@@ -421,6 +444,61 @@ QQC2.ApplicationWindow {
                 icon.name: "dialog-ok-apply"
                 onClicked: backend.setAutocompleteTags(tagsField.text)
             }
+        }
+
+        Kirigami.Heading {
+            level: 4
+            text: qsTr("Panel widget")
+            visible: settings.widget.status !== "unavailable"
+        }
+        QQC2.Label {
+            Layout.fillWidth: true
+            visible: settings.widget.status !== "unavailable"
+            wrapMode: Text.Wrap
+            opacity: 0.7
+            text: qsTr("Shows what you are tracking in a Plasma panel, and starts and stops tracking from there.")
+        }
+        RowLayout {
+            Layout.fillWidth: true
+            visible: settings.widget.status !== "unavailable"
+            spacing: Kirigami.Units.largeSpacing
+
+            QQC2.Label {
+                text: qsTr("HamsterProjekt Time Tracker")
+            }
+            QQC2.Label {
+                Layout.fillWidth: true
+                text: window.widgetStatus(settings.widget)
+                opacity: settings.widget.status === "current" ? 1 : 0.7
+                elide: Text.ElideRight
+                QQC2.ToolTip.text: settings.widget.path
+                QQC2.ToolTip.visible: widgetHover.hovered
+                HoverHandler {
+                    id: widgetHover
+                }
+            }
+            QQC2.Button {
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+                visible: settings.widget.status === "missing" || settings.widget.status === "outdated"
+                text: settings.widget.status === "outdated" ? qsTr("Update") : qsTr("Install")
+                icon.name: settings.widget.status === "outdated" ? "update-none" : "list-add"
+                onClicked: window.widgetResult(settings.installWidget())
+            }
+            QQC2.Button {
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+                visible: settings.widget.status === "current" || settings.widget.status === "outdated"
+                    || settings.widget.status === "newer"
+                text: qsTr("Remove")
+                icon.name: "edit-delete-remove"
+                onClicked: window.widgetResult(settings.removeWidget())
+            }
+        }
+        QQC2.Label {
+            Layout.fillWidth: true
+            visible: text !== ""
+            wrapMode: Text.Wrap
+            opacity: 0.7
+            text: window.widgetNote
         }
 
         Kirigami.Heading {
