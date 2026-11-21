@@ -260,9 +260,11 @@ release's version. Fetch it with [oras](https://oras.land/):
     flatpak install --user hamster-kde.flatpak
 
 
-The Plasma widget cannot be part of a Flatpak. Each release also has it as
-`hamster-kde.plasmoid`, with `install-flatpak-widget.sh`; download both into
-one folder and run:
+The Plasma widget cannot be part of a Flatpak. The Flatpak carries a copy
+and installs it from Tracking Settings → "Panel widget" → **Install**. Each
+release also has it as `hamster-kde.plasmoid`, with
+`install-flatpak-widget.sh`, for doing the same from a terminal; download
+both into one folder and run:
 
     sh install-flatpak-widget.sh
     sh install-flatpak-widget.sh --uninstall
@@ -324,6 +326,7 @@ dbus-python.
     tests/run_export_test.sh ~/projects/hamster /tmp/hamster-export # exports in every format
     python3 tests/test_reports.py                                  # the report writer alone
     python3 tests/test_assistants.py                               # connecting AI assistants
+    python3 tests/test_widget.py                                   # installing the panel widget
     node tests/lib_test.js                                         # the completion helpers of lib.js
 
 To try the real widget in a window: `plasmawindowed io.github.HamsterProjekt.plasmoid`.

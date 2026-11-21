@@ -37,6 +37,20 @@ cat > "$OUT/mcp-requests.jsonl" <<'JSON'
 {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "list_activities", "arguments": {"search": "packaging"}}}
 JSON
 
+# what the tracking settings do with the widget the Flatpak carries
+cat > "$OUT/widget-check.py" <<'PY'
+import os, sys
+sys.path.insert(0, os.path.join(sys.argv[1], "lib", "hamster-kde"))
+import widget
+w = widget.Widget()
+assert w.source == os.path.join(sys.argv[1], "lib", "hamster-kde", "plasmoid"), w.source
+assert w.status() == widget.MISSING, w.status()
+w.install()
+assert w.status() == widget.CURRENT, w.status()
+assert os.path.isfile(os.path.join(os.environ["HOME"], ".local", "share", "plasma", "plasmoids",
+                                   widget.WIDGET_ID, "contents", "ui", "main.qml"))
+PY
+
 # another installation that D-Bus can start, as the Hamster Flatpak with the
 # GTK windows is: a service with the SQLite database
 mkdir -p "$OUT/home/data/dbus-1/services"
@@ -77,6 +91,7 @@ app="$OUT/app"
 
 check "what the manifest installs is there" test -x "$app/bin/hamster-kde" -a -x "$app/bin/hamster-service" \
     -a -x "$app/bin/hamster-mcp" -a -f "$app/lib/hamster-kde/assistants.py" \
+    -a -f "$app/lib/hamster-kde/widget.py" -a -f "$app/lib/hamster-kde/plasmoid/contents/ui/main.qml" \
     -a -f "$app/lib/hamster/hamster/storage/markdown.py" -a -f "$app/lib/hamster-kde/qml/Overview.qml" \
     -a -f "$app/lib/hamster-kde/report_template.html" -a -f "$app/share/glib-2.0/schemas/gschemas.compiled" \
     -a -f "$app/share/applications/$ID.desktop" -a -f "$app/share/metainfo/$ID.metainfo.xml" \
@@ -111,6 +126,7 @@ n=0
 while [ $n -lt 100 ] && ! owner io.github.HamsterProjekt.Hamster; do sleep 0.1; n=$((n + 1)); done
 check "after a stop, the windows bring back their service" wait_for markdown
 check "the MCP server for AI assistants answers" sh -c "\"$app/bin/hamster-mcp\" < \"$OUT/mcp-requests.jsonl\" 2> \"$OUT/mcp.log\" | grep -q packaging"
+check "the settings find the widget it carries, and can install it" sh -c "cd / && HOME=\"$OUT/home\" FLATPAK_ID=\"$ID\" python3 \"$OUT/widget-check.py\" \"$app\""
 check "it says it is installed (no git needed for its version)" sh -c "cd / && PYTHONPATH=\"$app/lib/hamster\" python3 -c \"import hamster; assert hamster.installed, hamster.__version__\""
 sleep 2
 check "the windows are still running" kill -0 $windows

@@ -262,16 +262,22 @@ build it yourself.
    flatpak run io.github.HamsterProjekt.HamsterKDE
    ```
 
-4. For the panel widget, which cannot be inside a Flatpak, run the installer
-   in the folder you downloaded the release to:
+4. For the panel widget, which cannot be inside a Flatpak, open
+   **Tracking Settings** and click **Install** under "Panel widget". Then
+   add "HamsterProjekt Time Tracker" to a panel: right-click the panel and
+   choose "Add Widgets…". After an update of the Flatpak, the same place
+   offers **Update** for the widget.
+
+   From a terminal, the installer in the folder you downloaded the release
+   to does the same:
 
    ```bash
    sh install-flatpak-widget.sh
    ```
 
    or, in a clone, `scripts/install-flatpak-widget.sh`, which takes the
-   widget from `plasmoid/`. Then add "HamsterProjekt Time Tracker" to a panel. This
-   takes the place of `./install.sh`; use one or the other.
+   widget from `plasmoid/`. This takes the place of `./install.sh`; use one
+   or the other.
 
 The Flatpak keeps its files in
 `~/.var/app/io.github.HamsterProjekt.HamsterKDE/data/hamster/markdown`, not in
