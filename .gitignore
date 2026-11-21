@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 /hamster-kde.flatpak
 .flatpak-builder/
+/hamster-kde.plasmoid
+.vscode/

@@ -152,6 +152,11 @@ something does not work. In short, with both repositories cloned:
     ./install.sh --sqlite ~/projects/hamster   # the same, with Hamster's SQLite database
     ./install.sh --uninstall
 
+`make help` lists the same, and the Flatpak builds and the tests, as `make`
+targets: `make install`, `make install-sqlite`, `make flatpak-local`,
+`make test-all`, and so on. They run the scripts below; `HAMSTER=PATH` gives
+another Hamster checkout than `../hamster`.
+
 The sections below describe the two parts separately.
 
 ## Install the widget only
@@ -302,6 +307,9 @@ The entry field takes Hamster's own syntax:
 For example `coding@work,, login bug, #backend` or `10:30 lunch@personal`.
 
 ## Development
+
+`make test` runs the unit tests, `make test-all` everything below
+(screenshots and logs in `OUT`, by default `/tmp/hamster-kde-tests`).
 
     tests/run_backend_test.sh            # D-Bus layer against a mock service
     tests/run_view_test.sh out.png       # renders the views to a screenshot
