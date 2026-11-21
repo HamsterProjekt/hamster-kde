@@ -152,6 +152,11 @@ something does not work. In short, with both repositories cloned:
     ./install.sh --sqlite ~/projects/hamster   # the same, with Hamster's SQLite database
     ./install.sh --uninstall
 
+`make help` lists the same, and the Flatpak builds and the tests, as `make`
+targets: `make install`, `make install-sqlite`, `make flatpak-local`,
+`make test-all`, and so on. They run the scripts below; `HAMSTER=PATH` gives
+another Hamster checkout than `../hamster`.
+
 The sections below describe the two parts separately.
 
 ## Install the widget only
@@ -205,6 +210,25 @@ look, put your own `report_template.html` (start from
 
 The iCal file is not what Hamster writes: its times were in a form calendars
 reject. Times are written as local time without a time zone.
+
+### AI assistants
+
+The tracking settings can connect AI assistants to Hamster, so that you
+can ask one to track, list or correct your time ("what did I work on
+yesterday?", "start tracking code review", "rename the category X"). Under
+"AI assistants", Connect adds Hamster to the configuration of Claude
+Desktop or Claude Code, and Disconnect removes it again; the rest of their
+configuration is kept. Restart Claude Desktop, or start a new Claude Code
+session, for it to apply. For any other assistant that supports the Model
+Context Protocol, "Copy Configuration" puts the JSON to paste into its MCP
+settings on the clipboard.
+
+A connected assistant can add, change and delete your activities,
+categories and tracked time, through Hamster's MCP server (`hamster-mcp`,
+see HamsterProjekt/hamster). It is started by the assistant: as
+`flatpak run --command=hamster-mcp io.github.HamsterProjekt.HamsterKDE`
+with the Flatpak, or from the Hamster checkout that `install.sh` set up.
+Both need a Hamster that has the MCP server; otherwise the settings say so.
 
 ## Flatpak
 
@@ -284,6 +308,9 @@ For example `coding@work,, login bug, #backend` or `10:30 lunch@personal`.
 
 ## Development
 
+`make test` runs the unit tests, `make test-all` everything below
+(screenshots and logs in `OUT`, by default `/tmp/hamster-kde-tests`).
+
     tests/run_backend_test.sh            # D-Bus layer against a mock service
     tests/run_view_test.sh out.png       # renders the views to a screenshot
 
@@ -296,6 +323,7 @@ dbus-python.
     tests/run_sync_test.sh ~/projects/hamster /tmp/hamster-sync   # a sync client delivers changed files
     tests/run_export_test.sh ~/projects/hamster /tmp/hamster-export # exports in every format
     python3 tests/test_reports.py                                  # the report writer alone
+    python3 tests/test_assistants.py                               # connecting AI assistants
     node tests/lib_test.js                                         # the completion helpers of lib.js
 
 To try the real widget in a window: `plasmawindowed io.github.HamsterProjekt.plasmoid`.

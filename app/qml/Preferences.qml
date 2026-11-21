@@ -22,6 +22,28 @@ QQC2.ApplicationWindow {
     property string problem: ""
     // what happened when the storage folder was changed
     property string storageNote: ""
+    // what to do after connecting an AI assistant
+    property string assistantNote: ""
+
+    function setAssistantConnected(assistant, connected) {
+        const result = settings.setAssistantConnected(assistant.id, connected);
+        if (result.ok) {
+            assistantNote = result.message;
+            problem = "";
+        } else {
+            problem = result.message;
+        }
+    }
+
+    function assistantStatus(status) {
+        switch (status) {
+        case "connected": return qsTr("Connected");
+        case "outdated": return qsTr("Connected to another Hamster installation");
+        case "disconnected": return qsTr("Not connected");
+        case "unreadable": return qsTr("Its configuration file could not be read");
+        default: return qsTr("Not installed");
+        }
+    }
 
     function changeStorage(folder) {
         const result = settings.changeStorageDirectory(folder, copyFiles.checked);
@@ -53,7 +75,7 @@ QQC2.ApplicationWindow {
 
     title: qsTr("Tracking Settings")
     width: Kirigami.Units.gridUnit * 50
-    height: Kirigami.Units.gridUnit * 40
+    height: Kirigami.Units.gridUnit * 46
     minimumWidth: Kirigami.Units.gridUnit * 48
     minimumHeight: Kirigami.Units.gridUnit * 30
     visible: true
@@ -63,6 +85,12 @@ QQC2.ApplicationWindow {
         onActivitiesChanged: window.loadCategories()
         onTagsChanged: window.loadTags()
         onFailed: message => window.problem = message
+    }
+
+    // an assistant may have been installed in the meantime
+    onActiveChanged: {
+        if (active)
+            settings.refreshAssistants();
     }
 
     Component.onCompleted: {
@@ -393,6 +421,104 @@ QQC2.ApplicationWindow {
                 icon.name: "dialog-ok-apply"
                 onClicked: backend.setAutocompleteTags(tagsField.text)
             }
+        }
+
+        Kirigami.Heading {
+            level: 4
+            text: qsTr("AI assistants")
+        }
+        QQC2.Label {
+            Layout.fillWidth: true
+            wrapMode: Text.Wrap
+            opacity: 0.7
+            text: settings.mcpCommand !== ""
+                ? qsTr("A connected assistant, such as Claude, can read and change your tracked time, activities and categories when you ask it to.")
+                : qsTr("This installation of Hamster has no server for AI assistants (MCP). Update Hamster to get it.")
+        }
+        GridLayout {
+            Layout.fillWidth: true
+            visible: settings.mcpCommand !== ""
+            columns: 3
+            columnSpacing: Kirigami.Units.largeSpacing
+
+            Repeater {
+                model: settings.assistants
+                delegate: QQC2.Label {
+                    required property var modelData
+                    required property int index
+                    Layout.row: index
+                    Layout.column: 0
+                    text: modelData.name
+                }
+            }
+            Repeater {
+                model: settings.assistants
+                delegate: QQC2.Label {
+                    required property var modelData
+                    required property int index
+                    Layout.row: index
+                    Layout.column: 1
+                    Layout.fillWidth: true
+                    text: window.assistantStatus(modelData.status)
+                    opacity: modelData.status === "connected" ? 1 : 0.7
+                    elide: Text.ElideRight
+                    QQC2.ToolTip.text: modelData.path
+                    QQC2.ToolTip.visible: statusHover.hovered
+                    HoverHandler {
+                        id: statusHover
+                    }
+                }
+            }
+            Repeater {
+                model: settings.assistants
+                delegate: QQC2.Button {
+                    required property var modelData
+                    required property int index
+                    readonly property bool connected: modelData.status === "connected"
+                    Layout.row: index
+                    Layout.column: 2
+                    Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+                    text: connected ? qsTr("Disconnect")
+                        : modelData.status === "outdated" ? qsTr("Update") : qsTr("Connect")
+                    icon.name: connected ? "network-disconnect" : "network-connect"
+                    enabled: modelData.status !== "missing" && modelData.status !== "unreadable"
+                    onClicked: window.setAssistantConnected(modelData, !connected)
+                }
+            }
+
+            QQC2.Label {
+                Layout.row: settings.assistants.length
+                Layout.column: 0
+                text: qsTr("Other assistants")
+            }
+            QQC2.Label {
+                Layout.row: settings.assistants.length
+                Layout.column: 1
+                Layout.fillWidth: true
+                text: qsTr("Paste the configuration into the assistant's MCP settings")
+                opacity: 0.7
+                elide: Text.ElideRight
+            }
+            QQC2.Button {
+                Layout.row: settings.assistants.length
+                Layout.column: 2
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 10
+                text: qsTr("Copy Configuration")
+                icon.name: "edit-copy"
+                QQC2.ToolTip.text: settings.mcpCommand
+                QQC2.ToolTip.visible: hovered
+                onClicked: {
+                    if (settings.copyMcpConfiguration())
+                        window.assistantNote = qsTr("Copied to the clipboard.");
+                }
+            }
+        }
+        QQC2.Label {
+            Layout.fillWidth: true
+            visible: text !== ""
+            wrapMode: Text.Wrap
+            opacity: 0.7
+            text: window.assistantNote
         }
 
         RowLayout {
