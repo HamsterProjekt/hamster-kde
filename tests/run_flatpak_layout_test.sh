@@ -29,7 +29,13 @@ commands hamster > "$OUT/hamster.sh"
 commands hamster-kde > "$OUT/hamster-kde.sh"
 sh -e "$OUT/hamster-kde.sh" || { echo "FAIL  the hamster-kde module does not install"; exit 1; }
 # the wrappers name /app
-sed -i "s|/app/|$OUT/app/|g" "$OUT/app/bin/hamster-kde" "$OUT/app/bin/hamster-service"
+sed -i "s|/app/|$OUT/app/|g" "$OUT/app/bin/hamster-kde" "$OUT/app/bin/hamster-service" "$OUT/app/bin/hamster-mcp"
+
+# what an AI assistant would ask the MCP server (read below, on the private bus)
+cat > "$OUT/mcp-requests.jsonl" <<'JSON'
+{"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18"}}
+{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "list_activities", "arguments": {"search": "packaging"}}}
+JSON
 
 # another installation that D-Bus can start, as the Hamster Flatpak with the
 # GTK windows is: a service with the SQLite database
@@ -70,6 +76,7 @@ wait_for() {  # wait_for markdown|sqlite: until the service that answers has tha
 app="$OUT/app"
 
 check "what the manifest installs is there" test -x "$app/bin/hamster-kde" -a -x "$app/bin/hamster-service" \
+    -a -x "$app/bin/hamster-mcp" -a -f "$app/lib/hamster-kde/assistants.py" \
     -a -f "$app/lib/hamster/hamster/storage/markdown.py" -a -f "$app/lib/hamster-kde/qml/Overview.qml" \
     -a -f "$app/lib/hamster-kde/report_template.html" -a -f "$app/share/glib-2.0/schemas/gschemas.compiled" \
     -a -f "$app/share/applications/$ID.desktop" -a -f "$app/share/metainfo/$ID.metainfo.xml" \
@@ -103,6 +110,7 @@ while [ $n -lt 50 ] && owner io.github.HamsterProjekt.Hamster; do sleep 0.1; n=$
 n=0
 while [ $n -lt 100 ] && ! owner io.github.HamsterProjekt.Hamster; do sleep 0.1; n=$((n + 1)); done
 check "after a stop, the windows bring back their service" wait_for markdown
+check "the MCP server for AI assistants answers" sh -c "\"$app/bin/hamster-mcp\" < \"$OUT/mcp-requests.jsonl\" 2> \"$OUT/mcp.log\" | grep -q packaging"
 check "it says it is installed (no git needed for its version)" sh -c "cd / && PYTHONPATH=\"$app/lib/hamster\" python3 -c \"import hamster; assert hamster.installed, hamster.__version__\""
 sleep 2
 check "the windows are still running" kill -0 $windows

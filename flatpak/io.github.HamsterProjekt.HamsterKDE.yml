@@ -72,6 +72,7 @@ modules:
       - sed -e "s|@DATADIR@|${FLATPAK_DEST}/share|" -e "s|@VERSION@|$(cat src/hamster/VERSION)|"
         src/hamster/defs.py.in > ${FLATPAK_DEST}/lib/hamster/hamster/defs.py
       - install -Dm644 src/hamster-service.py ${FLATPAK_DEST}/lib/hamster/hamster-service.py
+      - install -Dm644 src/hamster-mcp.py ${FLATPAK_DEST}/lib/hamster/hamster-mcp.py
       - install -Dm644 data/io.github.HamsterProjekt.Hamster.gschema.xml -t ${FLATPAK_DEST}/share/glib-2.0/schemas
       - glib-compile-schemas ${FLATPAK_DEST}/share/glib-2.0/schemas
       - python3 -m compileall -q ${FLATPAK_DEST}/lib/hamster
@@ -85,10 +86,11 @@ modules:
     build-commands:
       - install -d ${FLATPAK_DEST}/lib/hamster-kde
       - cp -r app/qml ${FLATPAK_DEST}/lib/hamster-kde/
-      - install -m644 app/hamster-kde app/hamsterbus.py app/reports.py app/report_template.html
+      - install -m644 app/hamster-kde app/assistants.py app/hamsterbus.py app/reports.py app/report_template.html
         -t ${FLATPAK_DEST}/lib/hamster-kde
       - install -Dm755 flatpak/hamster-kde.sh ${FLATPAK_DEST}/bin/hamster-kde
       - install -Dm755 flatpak/hamster-service.sh ${FLATPAK_DEST}/bin/hamster-service
+      - install -Dm755 flatpak/hamster-mcp.sh ${FLATPAK_DEST}/bin/hamster-mcp
       - install -Dm644 flatpak/${FLATPAK_ID}.desktop -t ${FLATPAK_DEST}/share/applications
       - install -Dm644 flatpak/${FLATPAK_ID}.metainfo.xml -t ${FLATPAK_DEST}/share/metainfo
       # the HamsterProjekt icon; the widget asks for it under this name too

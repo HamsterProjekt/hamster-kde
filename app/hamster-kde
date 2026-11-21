@@ -19,6 +19,7 @@ import datetime
 import json
 import os
 import re
+import shlex
 import shutil
 import signal
 import sys
@@ -34,6 +35,7 @@ from PyQt6.QtQml import QQmlApplicationEngine, QQmlComponent
 from PyQt6.QtWidgets import QApplication
 
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+import assistants as mcp_assistants  # noqa: E402
 import reports  # noqa: E402
 from hamsterbus import HamsterBus  # noqa: E402
 
@@ -60,6 +62,7 @@ class Settings(QObject):
 
     dayStartMinutesChanged = pyqtSignal()
     storageDirectoryChanged = pyqtSignal()
+    assistantsChanged = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -154,6 +157,59 @@ class Settings(QObject):
         if kept:
             parts.append("{} file(s) were already there and were left as they are.".format(kept))
         return {"ok": True, "message": " ".join(parts)}
+
+    # --- AI assistants (Hamster's MCP server, see assistants.py) ---
+
+    @pyqtProperty(str, notify=assistantsChanged)
+    def mcpCommand(self):
+        """The command that starts the MCP server; empty if there is none."""
+        command = mcp_assistants.server_command()
+        return shlex.join(command) if command else ""
+
+    @pyqtProperty("QVariantList", notify=assistantsChanged)
+    def assistants(self):
+        """[{id, name, status, path}], status as in assistants.py."""
+        command = mcp_assistants.server_command()
+        return [{"id": assistant.id, "name": assistant.name,
+                 "status": assistant.status(command), "path": assistant.config_path}
+                for assistant in mcp_assistants.known_assistants()]
+
+    @pyqtSlot()
+    def refreshAssistants(self):
+        self.assistantsChanged.emit()
+
+    @pyqtSlot(str, bool, result="QVariantMap")
+    def setAssistantConnected(self, assistant_id, connected):
+        """Add Hamster to the configuration of an assistant, or remove it.
+
+        Returns {"ok": bool, "message": str}.
+        """
+        assistant = next((a for a in mcp_assistants.known_assistants() if a.id == assistant_id), None)
+        if assistant is None:
+            return {"ok": False, "message": "Unknown assistant: {}".format(assistant_id)}
+        try:
+            if connected:
+                assistant.connect(mcp_assistants.server_command())
+            else:
+                assistant.disconnect()
+        except mcp_assistants.AssistantError as error:
+            return {"ok": False, "message": str(error)}
+        finally:
+            self.assistantsChanged.emit()
+        if assistant.id == "claude-desktop":
+            message = "Quit Claude Desktop and start it again for the change to apply."
+        else:
+            message = "New {} sessions see the change.".format(assistant.name)
+        return {"ok": True, "message": message}
+
+    @pyqtSlot(result=bool)
+    def copyMcpConfiguration(self):
+        """Put the JSON for other assistants on the clipboard."""
+        command = mcp_assistants.server_command()
+        if not command:
+            return False
+        QApplication.clipboard().setText(mcp_assistants.configuration_snippet(command))
+        return True
 
     @pyqtProperty(bool, constant=True)
     def writable(self):
